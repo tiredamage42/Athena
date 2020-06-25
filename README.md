@@ -6,3 +6,4 @@ Written in python.
 
 Required Libraries:
 `tensorflow`
+`matplotlib`
