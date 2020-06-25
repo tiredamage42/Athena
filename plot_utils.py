@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 # debug 3 images with some labels
-def plot_images(images, labels, labels_prefix):
+def plot_3_imgs(images, labels, labels_prefix):
 
     fig, axes = plt.subplots(1, 3)
     fig.subplots_adjust(hspace=0.3)

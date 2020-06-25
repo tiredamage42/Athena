@@ -62,6 +62,198 @@ NOTE FOR PEOPLE THAT ARE WELL VERSED IN MACHINE LEARNING:
 
 '''
 
+import sys
+import os
+import tensorflow.compat.v1 as tf
+import numpy as np
+from plot_utils import plot_3_imgs
+
+# dont want to spend a million years catching up on tensorflow's new api's...
+tf.disable_v2_behavior()
+
+
+'''
+========================================================================================
+DATA:
+========================================================================================
+'''
+
+'''
+MNIST Contains:
+60K training samples and 10K test samples
+x inputs are [28, 28] uint8 arrays range (0 - 255)
+y inputs are uint8 values in range (0 - 9), the label for each corresponding image
+'''
+# the dataset's image resolution
+img_res = 28
+
+# we need to reshape teh iamges into one long array of values of length: (28 * 28)
+img_res_flat = img_res * img_res
+
+# how many types of labels there are
+num_classes = 10
+
+# load MNIST dataset to the current directory
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(path=os.getcwd()+'/mnist.npz')
+
+# reshape images to single dimension (for simplicity)
+x_train, x_test = np.reshape(x_train, [-1, img_res_flat]), np.reshape(x_test, [-1, img_res_flat])
+
+# Rescale the image pixel values from [0,255] to the [0.0,1.0] range.
+x_train, x_test = x_train/255.0, x_test/255.0
+
+# helper functions for getting random data batches
+def _get_random_batch(batch_size, x, y):
+    idx = np.random.choice(np.arange(len(x)), batch_size, replace=False)
+    input_batch = x[idx]
+    labels_batch = y[idx]
+    return input_batch, labels_batch
+
+def get_random_training_batch(batch_size):
+    return _get_random_batch(batch_size, x_train, y_train)
+
+def get_random_testing_batch(batch_size):
+    return _get_random_batch(batch_size, x_test, y_test)
+
+# check if the data is correct:
+images, labels = get_random_training_batch(3)
+plot_3_imgs(images.reshape([-1, img_res, img_res]), labels, "Label")
+
+
+'''
+========================================================================================
+MODEL:
+========================================================================================
+'''
+'''
+Define the model graph:
+
+NOTE: 
+usually when dealing with neural nets, we input BATCHES of data to make the training process go quicker,
+which introduces an extra leading dimension...
+'''
+def build_model (trainable):
+    
+    batch_dimension_size = None # this lets us have a variable batch size
+
+    # the input layer
+    input_layer = tf.placeholder(tf.float32, [batch_dimension_size, img_res_flat])
+
+    # the weights and biases of the hidden layer to be trained
+    weights = tf.get_variable("weights", [img_res_flat, num_classes])
+    biases = tf.get_variable("biases", [num_classes])
+
+    # the actual multiplication that happens in the hidden layer
+    outputs = tf.matmul(input_layer, weights) + biases
+    # the outputs above is a 2d array of size [batch_dimension_size, num_classes], where each 
+    # index is the probability (from 0.0 to 1.0) that the input is that 
+    # corresponding label
+
+    # in order to interpret the outputs as a probability, we need to run it
+    # through a softmax function, 
+    probabilities = tf.nn.softmax(outputs)
+
+    # we then get the index of the highest probability
+    prediction = tf.argmax(probabilities, axis=1)
+
+    # for training we need the target label (true label) for each input in the batch
+    target_output = tf.placeholder(tf.int64, [batch_dimension_size])
+
+    '''
+    if trainable we add all the necessary ops like optimizing and calculating loss
+    else we just leave them out for the sake of performance
+    '''
+    if trainable:
+        # to compute the loss to minimize we first calculate the cross entropy
+        # between the target_outputs and the outputs the model predicted
+        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=outputs, labels=target_output)
+
+        # the overall loss is the average of the cross_entropy of all the samples we input into the model:
+        loss = tf.reduce_mean(cross_entropy)
+
+        # in order to perform the backpropagation and weight value modification, we use tensorflow's
+        # optimizers
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+
+    # we need an accuracy metric, so we create a boolean value for whetehr each batch was
+    # predicted correctly
+    correct_prediction = tf.equal(target_output, prediction)
+
+    # we then cast that to floats (0 for falst, 1 for true)
+    # and get the average of all the values for the batch, getting us the accuracy 
+    # for the predictions in that batch
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    variable_initializer = tf.global_variables_initializer()
+
+    return variable_initializer, input_layer, weights, biases, prediction, optimizer, target_output, accuracy
+
+
+variable_initializer, input_layer, weights, biases, prediction, optimizer, target_output, accuracy =build_model(trainable=True)
+
+
+
+'''
+========================================================================================
+TRAINING / TESTING:
+========================================================================================
+'''
+
+# tensorflow specific functionality to actually run the model defined above:
+session = tf.Session()
+
+#initialize variables (the weights and biases)
+session.run(variable_initializer)
+
+# test the accuracy of the predictions on the test set (so we know that the model is actually
+# learning and generalizing, not jsut memorizing the training data)
+def test_accuracy():
+    acc = session.run(accuracy, feed_dict={
+        input_layer: x_test,
+        target_output: y_test
+    })
+    return acc
+
+def train_model(num_iterations, batch_size, accuracy_test_frequency):
+    acc = 0
+    for i in range(num_iterations):
+
+        if i % accuracy_test_frequency == 0:
+            acc = test_accuracy()
+            
+        sys.stdout.write("\rTraining Iteration {0}/{1} :: Test Accuracy: {2:.1%} ==========".format(i, num_iterations, acc))
+        sys.stdout.flush()
+
+        # get a batch of training samples and set them as the
+        # input, and target
+        input_batch, labels_batch = get_random_training_batch(batch_size)
+
+        # build a dictionary object with corresponding placeholders and inptus
+        # for those placeholders:
+        feed_dict = {
+            input_layer: input_batch,
+            target_output: labels_batch
+        }
+
+        # run the optimization iteration for this batch
+        session.run(optimizer, feed_dict=feed_dict)
+
+
+# show 3 predictions from the test set (in a human readable fashion)
+def debug_prediction():
+    x_test, _ = get_random_testing_batch(3)
+    pred = session.run(prediction, feed_dict={ input_layer: x_test })
+    plot_3_imgs(x_test.reshape([-1, img_res, img_res]), pred, "Prediction")
+
+
+# trian the model, then debug
+train_model(num_iterations=2000, batch_size=32, accuracy_test_frequency=100)
+debug_prediction()
+
+# cleanup tensorflow resources
+session.close()
+
+
 '''
 SHOW PROOF OF CONCEPT WITH SOME COMMENTS:
 NN THAT LEARNS MNIST

@@ -2,4 +2,5 @@
 .pyc
 
 # ignore dataset
-.npz
+*.npz
+__pycache__
