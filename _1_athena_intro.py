@@ -63,9 +63,10 @@ NOTE FOR PEOPLE THAT ARE WELL VERSED IN MACHINE LEARNING:
 '''
 
 import sys
+import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 import numpy as np
-from plot_utils import plot_3_imgs
+from plot_utils import plot_9_imgs, save_imgs, batches_2_grid
 from mnist_dataset import MNIST
 
 # dont want to spend a million years catching up on tensorflow's new api's...
@@ -81,8 +82,8 @@ dataset = MNIST()
 debug_img_reshape = [-1, dataset.img_res, dataset.img_res]
 
 # check if the data is correct:
-images, labels = dataset.get_random_training_batch(3)
-plot_3_imgs(images.reshape(debug_img_reshape), labels, "Label")
+images, labels = dataset.get_random_training_batch(9)
+plot_9_imgs(images.reshape(debug_img_reshape), labels, "Label")
 
 
 '''
@@ -203,13 +204,13 @@ def train_model(num_iterations, batch_size, accuracy_test_frequency):
 
 # show 3 predictions from the test set (in a human readable fashion)
 def debug_prediction():
-    x_test, _ = dataset.get_random_testing_batch(3)
+    x_test, _ = dataset.get_random_testing_batch(9)
     pred = session.run(prediction, feed_dict={ input_layer: x_test })
-    plot_3_imgs(x_test.reshape(debug_img_reshape), pred, "Prediction")
+    plot_9_imgs(x_test.reshape(debug_img_reshape), pred, "Prediction")
 
 
 # trian the model, then debug
-train_model(num_iterations=2000, batch_size=32, accuracy_test_frequency=100)
+train_model(num_iterations=1000, batch_size=32, accuracy_test_frequency=100)
 debug_prediction()
 
 # cleanup tensorflow resources
@@ -265,11 +266,117 @@ hidden layers of the Discriminaotr to get better at generating more realistic da
 '''
 
 
+# Sample noise from uniform distribution
+def sample_noise(batch_size, noise_size):
+    return np.random.uniform(-1., 1., size=[batch_size, noise_size])
+
 '''
-SHOW PROOF OF CONCEPT WITH SOME COMMENTS:
-GAN THAT GENERATES MNIST IMAGES
-SHOW PROGRESS IN OUTPUT FOLDER IMAGES
+========================================================================================
+MODEL:
+========================================================================================
 '''
+
+def hidden_layer (name, input_layer, output_size, activation=tf2.nn.leaky_relu):
+    with tf.variable_scope(name):
+        weights = tf.get_variable("weights", [input_layer.shape[-1], output_size])
+        biases = tf.get_variable("biases", [output_size])
+        outputs = tf.matmul(input_layer, weights) + biases
+        # some hidden layers require a function at the end to normalize the data
+        if activation is not None:
+            outputs = activation(outputs)
+        return outputs
+    
+
+def generator(input_layer):
+    with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
+        h1 = hidden_layer('layer1', input_layer, 128)
+        image = hidden_layer('image', h1, dataset.img_res_flat, tf2.nn.sigmoid)
+    return image
+
+
+def discriminator(input_layer):
+    with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
+        h1 = hidden_layer('layer1', input_layer, 128)
+        # prediction output size is 1 values (either 0 or 1)
+        pred = hidden_layer('prediction', h1, 1, tf2.nn.sigmoid)
+    return pred
+
+input_noise_dimension = 100
+
+# nosie sample to feed into the generator
+input_noise = tf.placeholder(tf.float32, [None, input_noise_dimension])
+
+# the generated image from our NN
+generated_image = generator(input_noise)
+
+# a real mnist image form the dataset
+real_image = tf.placeholder(tf.float32, [None, dataset.img_res_flat])
+
+# prediction as to whether th real image is real or fake
+real_prediction = discriminator(real_image)
+
+# prediction as to whether the generated image is real or fake
+generated_prediction = discriminator(generated_image)
+
+# calculate loss
+d_loss = -tf.reduce_mean(tf.log(real_prediction) + tf.log(1.0 - generated_prediction))
+g_loss = -tf.reduce_mean(tf.log(generated_prediction))
+
+# we need to seperate the weights of the discriminator and generator
+# in order to train them differently
+train_vars = tf.trainable_variables()
+
+discriminator_weights = [var for var in train_vars if var.name.startswith("disc")]
+generator_weights = [var for var in train_vars if var.name.startswith("gen")]
+
+# optimizers
+discriminator_optimizer = tf.train.AdamOptimizer().minimize(d_loss, var_list=discriminator_weights)
+generator_optimizer = tf.train.AdamOptimizer().minimize(g_loss, var_list=generator_weights)
+
+variable_initializer = tf.global_variables_initializer()
+
+'''
+========================================================================================
+TRAINING / TESTING:
+========================================================================================
+'''
+
+# tensorflow specific functionality to actually run the model defined above:
+session = tf.Session()
+
+#initialize variables (the weights and biases)
+session.run(variable_initializer)
+
+def train_gan(num_iterations, batch_size, debug_frequency):
+    debug_batch_size = 25 # 5x5
+    debug_noise = sample_noise(debug_batch_size, input_noise_dimension)
+
+    for i in range(num_iterations):
+
+        if i % debug_frequency == 0:
+            debug_imgs = session.run(generated_image, feed_dict={ input_noise: debug_noise })
+            debug_imgs = debug_imgs.reshape(debug_img_reshape)
+            debug_imgs = batches_2_grid(debug_imgs, grid_res=5)
+            save_imgs(debug_imgs, "mnist_gen_{0}".format(i))
+            
+        # get a batch of training samples
+        input_batch, _ = dataset.get_random_training_batch(batch_size)
+
+        # train the discriminator
+        _, disc_loss = session.run([discriminator_optimizer, d_loss], feed_dict={ real_image: input_batch, input_noise: sample_noise(batch_size, input_noise_dimension) } )
+        # train the generator
+        _, gen_loss = session.run([generator_optimizer, g_loss], feed_dict={ input_noise: sample_noise(batch_size, input_noise_dimension) })
+
+        sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
+        sys.stdout.flush()
+
+train_gan(10000, 32, 1000)
+
+# cleanup tensorflow resources
+session.close()
+
+# clear the graph for the next demo
+tf.reset_default_graph()
 
 
 '''

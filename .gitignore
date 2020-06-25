@@ -1,6 +1,9 @@
 # python ignores
 .pyc
 
+# output images
+images/
+
 # ignore dataset
 *.npz
 __pycache__
