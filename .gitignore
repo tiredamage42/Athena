@@ -1,0 +1,5 @@
+# python ignores
+.pyc
+
+# ignore dataset
+.npz
