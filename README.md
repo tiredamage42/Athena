@@ -5,5 +5,5 @@ An experiment in neural network creation, created as my Stackathon project for F
 Written in python.
 
 Required Libraries:
-`tensorflow`
-`matplotlib`
+- `tensorflow`
+- `matplotlib`
