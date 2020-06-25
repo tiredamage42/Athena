@@ -253,15 +253,8 @@ debug_prediction()
 # cleanup tensorflow resources
 session.close()
 
+tf.reset_default_graph()
 
-'''
-SHOW PROOF OF CONCEPT WITH SOME COMMENTS:
-NN THAT LEARNS MNIST
-SHOW UNTRAINED ACCURACY
-TRAIN
-SHOW TRAINED ACCURACY
-SHOW VISUAL INPUT OUTPUT
-'''
 
 
 '''
