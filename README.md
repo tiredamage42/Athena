@@ -6,4 +6,3 @@ Written in python.
 
 Required Libraries:
 `tensorflow`
-`numpy`
