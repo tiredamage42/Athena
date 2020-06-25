@@ -7,7 +7,7 @@ import numpy as np
 def plot_9_imgs(images, labels, labels_prefix):
 
     fig, axes = plt.subplots(3, 3)
-    fig.subplots_adjust(hspace=0.3, vspace=0.3)
+    fig.subplots_adjust(hspace=0.3, wspace=0.3)
 
     for i, ax in enumerate(axes.flat):
         ax.imshow(images[i], cmap='binary')

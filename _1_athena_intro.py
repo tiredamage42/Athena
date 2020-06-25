@@ -66,7 +66,7 @@ import sys
 import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 import numpy as np
-from plot_utils import plot_9_imgs, save_imgs, batches_2_grid
+from plot_utils import plot_9_imgs, save_img, batches_2_grid
 from mnist_dataset import MNIST
 
 # dont want to spend a million years catching up on tensorflow's new api's...
@@ -281,25 +281,24 @@ def hidden_layer (name, input_layer, output_size, activation=tf2.nn.leaky_relu):
         weights = tf.get_variable("weights", [input_layer.shape[-1], output_size])
         biases = tf.get_variable("biases", [output_size])
         outputs = tf.matmul(input_layer, weights) + biases
-        # some hidden layers require a function at the end to normalize the data
-        if activation is not None:
-            outputs = activation(outputs)
-        return outputs
+        # hidden layers require a function at the end to normalize the data
+        activated = activation(outputs)
+        return activated, outputs
     
 
 def generator(input_layer):
     with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
-        h1 = hidden_layer('layer1', input_layer, 128)
-        image = hidden_layer('image', h1, dataset.img_res_flat, tf2.nn.sigmoid)
+        h1, _ = hidden_layer('layer1', input_layer, 128)
+        image, _ = hidden_layer('image', h1, dataset.img_res_flat, tf2.nn.sigmoid)
     return image
 
 
 def discriminator(input_layer):
     with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
-        h1 = hidden_layer('layer1', input_layer, 128)
+        h1, _ = hidden_layer('layer1', input_layer, 128)
         # prediction output size is 1 values (either 0 or 1)
-        pred = hidden_layer('prediction', h1, 1, tf2.nn.sigmoid)
-    return pred
+        pred, logits = hidden_layer('prediction', h1, 1, tf2.nn.sigmoid)
+    return pred, logits
 
 input_noise_dimension = 100
 
@@ -313,14 +312,25 @@ generated_image = generator(input_noise)
 real_image = tf.placeholder(tf.float32, [None, dataset.img_res_flat])
 
 # prediction as to whether th real image is real or fake
-real_prediction = discriminator(real_image)
+real_prediction, logits_real = discriminator(real_image)
 
 # prediction as to whether the generated image is real or fake
-generated_prediction = discriminator(generated_image)
+generated_prediction, logits_fake = discriminator(generated_image)
 
 # calculate loss
-d_loss = -tf.reduce_mean(tf.log(real_prediction) + tf.log(1.0 - generated_prediction))
-g_loss = -tf.reduce_mean(tf.log(generated_prediction))
+# discriminator loss for real input is how far discriminator is from labeling it it as "real"
+D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real, labels=tf.ones_like(logits_real)))
+# discriminator loss for generated input is how far discriminator is from labeling it it as "fake"
+D_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.zeros_like(logits_fake)))
+# combine the discriminator loss
+d_loss = D_loss_real + D_loss_fake
+
+# generator loss is how far discriminator is from labeling generated image it as "real"
+g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.ones_like(logits_fake)))
+
+
+
+
 
 # we need to seperate the weights of the discriminator and generator
 # in order to train them differently
@@ -353,11 +363,11 @@ def train_gan(num_iterations, batch_size, debug_frequency):
 
     for i in range(num_iterations):
 
-        if i % debug_frequency == 0:
+        if i % debug_frequency == 0 or i == num_iterations - 1:
             debug_imgs = session.run(generated_image, feed_dict={ input_noise: debug_noise })
             debug_imgs = debug_imgs.reshape(debug_img_reshape)
             debug_imgs = batches_2_grid(debug_imgs, grid_res=5)
-            save_imgs(debug_imgs, "mnist_gen_{0}".format(i))
+            save_img(debug_imgs, "mnist_gen_{0}".format(i))
             
         # get a batch of training samples
         input_batch, _ = dataset.get_random_training_batch(batch_size)
@@ -370,7 +380,7 @@ def train_gan(num_iterations, batch_size, debug_frequency):
         sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.flush()
 
-train_gan(10000, 32, 1000)
+train_gan(100000, 128, 10000)
 
 # cleanup tensorflow resources
 session.close()
