@@ -363,7 +363,7 @@ def train_gan(num_iterations, batch_size, debug_frequency):
 
     for i in range(num_iterations):
 
-        if i % debug_frequency == 0 or i == num_iterations - 1:
+        if i % debug_frequency == 0 or i == num_iterations - 1 or (i < 10000 and i % 1000 == 0):
             debug_imgs = session.run(generated_image, feed_dict={ input_noise: debug_noise })
             debug_imgs = debug_imgs.reshape(debug_img_reshape)
             debug_imgs = batches_2_grid(debug_imgs, grid_res=5)
@@ -380,7 +380,7 @@ def train_gan(num_iterations, batch_size, debug_frequency):
         sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.flush()
 
-train_gan(100000, 128, 10000)
+train_gan(100000, 32, 10000)
 
 # cleanup tensorflow resources
 session.close()
