@@ -1,6 +1,6 @@
 # Athena
 
-An experiment in neural network creation.
+An experiment in neural network creation, created as my Stackathon project for Fullstack Academy.
 
 Written in python.
 
