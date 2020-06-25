@@ -94,7 +94,7 @@ img_res_flat = img_res * img_res
 num_classes = 10
 
 # load MNIST dataset to the current directory
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(path=os.getcwd()+'/mnist.npz')
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(path=os.getcwd() + '/mnist.npz')
 
 # reshape images to single dimension (for simplicity)
 x_train, x_test = np.reshape(x_train, [-1, img_res_flat]), np.reshape(x_test, [-1, img_res_flat])
@@ -124,8 +124,7 @@ plot_3_imgs(images.reshape([-1, img_res, img_res]), labels, "Label")
 ========================================================================================
 MODEL:
 ========================================================================================
-'''
-'''
+
 Define the model graph:
 
 NOTE: 
@@ -171,8 +170,7 @@ def build_model (trainable):
         # the overall loss is the average of the cross_entropy of all the samples we input into the model:
         loss = tf.reduce_mean(cross_entropy)
 
-        # in order to perform the backpropagation and weight value modification, we use tensorflow's
-        # optimizers
+        # in order to perform the backpropagation and weight value modification, we use tensorflow's optimizers
         optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
 
     # we need an accuracy metric, so we create a boolean value for whetehr each batch was
@@ -189,15 +187,14 @@ def build_model (trainable):
     return variable_initializer, input_layer, weights, biases, prediction, optimizer, target_output, accuracy
 
 
-variable_initializer, input_layer, weights, biases, prediction, optimizer, target_output, accuracy =build_model(trainable=True)
-
-
 
 '''
 ========================================================================================
 TRAINING / TESTING:
 ========================================================================================
 '''
+# build the model graph
+variable_initializer, input_layer, _, _, prediction, optimizer, target_output, accuracy = build_model(trainable=True)
 
 # tensorflow specific functionality to actually run the model defined above:
 session = tf.Session()
@@ -253,6 +250,7 @@ debug_prediction()
 # cleanup tensorflow resources
 session.close()
 
+# clear the graph for the next demo
 tf.reset_default_graph()
 
 
