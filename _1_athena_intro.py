@@ -63,10 +63,10 @@ NOTE FOR PEOPLE THAT ARE WELL VERSED IN MACHINE LEARNING:
 '''
 
 import sys
-import os
 import tensorflow.compat.v1 as tf
 import numpy as np
 from plot_utils import plot_3_imgs
+from mnist_dataset import MNIST
 
 # dont want to spend a million years catching up on tensorflow's new api's...
 tf.disable_v2_behavior()
@@ -77,47 +77,12 @@ tf.disable_v2_behavior()
 DATA:
 ========================================================================================
 '''
-
-'''
-MNIST Contains:
-60K training samples and 10K test samples
-x inputs are [28, 28] uint8 arrays range (0 - 255)
-y inputs are uint8 values in range (0 - 9), the label for each corresponding image
-'''
-# the dataset's image resolution
-img_res = 28
-
-# we need to reshape teh iamges into one long array of values of length: (28 * 28)
-img_res_flat = img_res * img_res
-
-# how many types of labels there are
-num_classes = 10
-
-# load MNIST dataset to the current directory
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(path=os.getcwd() + '/mnist.npz')
-
-# reshape images to single dimension (for simplicity)
-x_train, x_test = np.reshape(x_train, [-1, img_res_flat]), np.reshape(x_test, [-1, img_res_flat])
-
-# Rescale the image pixel values from [0,255] to the [0.0,1.0] range.
-x_train, x_test = x_train/255.0, x_test/255.0
-
-# helper functions for getting random data batches
-def _get_random_batch(batch_size, x, y):
-    idx = np.random.choice(np.arange(len(x)), batch_size, replace=False)
-    input_batch = x[idx]
-    labels_batch = y[idx]
-    return input_batch, labels_batch
-
-def get_random_training_batch(batch_size):
-    return _get_random_batch(batch_size, x_train, y_train)
-
-def get_random_testing_batch(batch_size):
-    return _get_random_batch(batch_size, x_test, y_test)
+dataset = MNIST()
+debug_img_reshape = [-1, dataset.img_res, dataset.img_res]
 
 # check if the data is correct:
-images, labels = get_random_training_batch(3)
-plot_3_imgs(images.reshape([-1, img_res, img_res]), labels, "Label")
+images, labels = dataset.get_random_training_batch(3)
+plot_3_imgs(images.reshape(debug_img_reshape), labels, "Label")
 
 
 '''
@@ -136,11 +101,11 @@ def build_model (trainable):
     batch_dimension_size = None # this lets us have a variable batch size
 
     # the input layer
-    input_layer = tf.placeholder(tf.float32, [batch_dimension_size, img_res_flat])
+    input_layer = tf.placeholder(tf.float32, [batch_dimension_size, dataset.img_res_flat])
 
     # the weights and biases of the hidden layer to be trained
-    weights = tf.get_variable("weights", [img_res_flat, num_classes])
-    biases = tf.get_variable("biases", [num_classes])
+    weights = tf.get_variable("weights", [dataset.img_res_flat, dataset.num_classes])
+    biases = tf.get_variable("biases", [dataset.num_classes])
 
     # the actual multiplication that happens in the hidden layer
     outputs = tf.matmul(input_layer, weights) + biases
@@ -206,8 +171,8 @@ session.run(variable_initializer)
 # learning and generalizing, not jsut memorizing the training data)
 def test_accuracy():
     acc = session.run(accuracy, feed_dict={
-        input_layer: x_test,
-        target_output: y_test
+        input_layer: dataset.x_test,
+        target_output: dataset.y_test
     })
     return acc
 
@@ -223,7 +188,7 @@ def train_model(num_iterations, batch_size, accuracy_test_frequency):
 
         # get a batch of training samples and set them as the
         # input, and target
-        input_batch, labels_batch = get_random_training_batch(batch_size)
+        input_batch, labels_batch = dataset.get_random_training_batch(batch_size)
 
         # build a dictionary object with corresponding placeholders and inptus
         # for those placeholders:
@@ -238,9 +203,9 @@ def train_model(num_iterations, batch_size, accuracy_test_frequency):
 
 # show 3 predictions from the test set (in a human readable fashion)
 def debug_prediction():
-    x_test, _ = get_random_testing_batch(3)
+    x_test, _ = dataset.get_random_testing_batch(3)
     pred = session.run(prediction, feed_dict={ input_layer: x_test })
-    plot_3_imgs(x_test.reshape([-1, img_res, img_res]), pred, "Prediction")
+    plot_3_imgs(x_test.reshape(debug_img_reshape), pred, "Prediction")
 
 
 # trian the model, then debug
