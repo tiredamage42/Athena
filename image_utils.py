@@ -4,11 +4,16 @@ from PIL import Image
 import numpy as np
 import glob
 
-# debug 9 images with some labels
-def plot_9_imgs(images, labels, labels_prefix, name, directory="images/"):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+
+imgs_dir = 'images/'
+def assert_images_dir():
+    if not os.path.exists(imgs_dir):
+        os.makedirs(imgs_dir)
     
+# debug 9 images with some labels
+def plot_9_imgs(images, labels, labels_prefix, name):
+    assert_images_dir()
+
     fig, axes = plt.subplots(3, 3)
     fig.subplots_adjust(hspace=0.3, wspace=0.3)
 
@@ -20,15 +25,15 @@ def plot_9_imgs(images, labels, labels_prefix, name, directory="images/"):
         ax.set_xticks([])
         ax.set_yticks([])
     
-    plt.savefig(directory + name + '.png')
+    plt.savefig(imgs_dir + name + '.png')
     plt.clf()
 
 # save a numpy array as an image file on disk
-def save_img(image, name, directory="images/"):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+def save_img(image, name):
+    assert_images_dir()
+    
     im = Image.fromarray((image * 255).astype(np.uint8)).convert("L")
-    im.save(directory + name + '.jpg')
+    im.save(imgs_dir + name + '.jpg')
 
 # helper function to take images in shape [batches, res, res]
 # to shape [res * squareroot(batches), res *  squareroot(batches)] grid
@@ -50,10 +55,13 @@ def batches_2_grid (batches, grid_res):
         result[x_start:x_end, y_start:y_end] = batches[i]
     return result
 
-def plot_accuracy_graph(iterations, accuracies, baseline, directory="images/"):
-
+def plot_accuracy_graph(iterations, accuracies, baseline, name):
+    assert_images_dir()
+    
     plt.plot(iterations, accuracies, label='Generated Weights')
-    plt.plot([iterations[0], iterations[-1]], [baseline, baseline], label='Untrained')
+
+    if baseline is not None:
+        plt.plot([iterations[0], iterations[-1]], [baseline, baseline], label='Untrained')
 
     plt.xlabel('Iteration')
     plt.ylabel('Accuracy')
@@ -62,11 +70,11 @@ def plot_accuracy_graph(iterations, accuracies, baseline, directory="images/"):
     plt.grid(True)
     plt.tight_layout()
 
-    plt.savefig(directory + 'AthenaProgress.png')
+    plt.savefig(imgs_dir + name + '.png')
     plt.clf()
 
-def create_gif_from_images(images, duration, directory, name):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+def create_gif_from_images(images, duration, name):
+    assert_images_dir()
+    
     images = [Image.fromarray((image * 255).astype(np.uint8)).convert("P") for image in images]
-    images[0].save(directory + name + '.gif', save_all=True, append_images=images[1:], optimize=False, duration=((duration * 1000) / len(images)), loop=0)
+    images[0].save(imgs_dir + name + '.gif', save_all=True, append_images=images[1:], optimize=False, duration=((duration * 1000) / len(images)), loop=0)

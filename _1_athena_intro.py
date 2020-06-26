@@ -2,7 +2,7 @@ import sys
 import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 import numpy as np
-from plot_utils import plot_9_imgs, save_img, batches_2_grid, plot_accuracy_graph, create_gif_from_images
+from plot_utils import plot_9_imgs, batches_2_grid, plot_accuracy_graph, create_gif_from_images
 from mnist_dataset import MNIST
 from weights_dataset import WeightsData
 
@@ -134,10 +134,14 @@ def test_accuracy():
 
 def train_model(num_iterations, batch_size, accuracy_test_frequency):
     acc = 0
+    accuracies = []
+    iterations = []
     for i in range(num_iterations):
 
         if i % accuracy_test_frequency == 0:
             acc = test_accuracy()
+            iterations.append(i)
+            accuracies.append(acc)
             
         sys.stdout.write("\rTraining Iteration {0}/{1} :: Test Accuracy: {2:.1%} ==========".format(i, num_iterations, acc))
         sys.stdout.flush()
@@ -155,13 +159,18 @@ def train_model(num_iterations, batch_size, accuracy_test_frequency):
 
         # run the optimization iteration for this batch
         session.run(optimizer, feed_dict=feed_dict)
+        
+    return iterations, accuracies
 
 
 # see how the model makes predictions before training
 debug_prediction("NNUntrained")
 
 # trian the model
-train_model(num_iterations=1000, batch_size=32, accuracy_test_frequency=100)
+iterations, accuracies = train_model(num_iterations=1000, batch_size=32, accuracy_test_frequency=100)
+
+plot_accuracy_graph(iterations, accuracies, None, 'FeedForwardNN')
+
 
 # debug again, this time the predictions should be more accurate
 debug_prediction("NNTrained")
@@ -253,10 +262,7 @@ def train_gan(num_iterations, batch_size, debug_frequency):
             debug_imgs = session.run(generated_image, feed_dict={ input_noise: debug_noise })
             debug_imgs = debug_imgs.reshape(debug_img_reshape)
             debug_imgs = batches_2_grid(debug_imgs, grid_res=5)
-
             gen_imgs.append(debug_imgs)
-            # save_img(debug_imgs, "mnist_gen_{0}".format(i), directory="images/gan-gen/")
-
             
         # get a batch of training samples
         input_batch, _ = dataset.get_random_training_batch(batch_size)
