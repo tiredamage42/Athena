@@ -19,7 +19,6 @@ def plot_9_imgs(images, labels, labels_prefix, name, directory="images/"):
         ax.set_xticks([])
         ax.set_yticks([])
     
-    # plt.show()
     plt.savefig(directory + name + '.png')
 
 # save a numpy array as an image file on disk
@@ -48,3 +47,20 @@ def batches_2_grid (batches, grid_res):
         
         result[x_start:x_end, y_start:y_end] = batches[i]
     return result
+
+
+
+
+def plot_accuracy_graph(iterations, accuracies, baseline, directory="images/"):
+
+    plt.plot(iterations, accuracies, label='Generated Weights')
+    plt.plot([iterations[0], iterations[-1]], [baseline, baseline], label='Untrained')
+
+    plt.xlabel('Iteration')
+    plt.ylabel('Accuracy')
+
+    plt.legend(loc=4)
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.savefig(directory + 'AthenaProgress.png')
