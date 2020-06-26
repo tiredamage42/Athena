@@ -84,7 +84,6 @@ if __name__ == "__main__":
     a demo to show how to train a feed forward neural net to label the mnist dataset
     '''
     import sys
-    import numpy as np
     from image_utils import plot_9_imgs, plot_accuracy_graph
     from mnist_dataset import MNIST
 
