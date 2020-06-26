@@ -2,11 +2,13 @@ import sys
 import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 import numpy as np
-from plot_utils import plot_9_imgs, save_img, batches_2_grid, plot_accuracy_graph
+from plot_utils import plot_9_imgs, save_img, batches_2_grid, plot_accuracy_graph, create_gif_from_images, get_images_from_dir
 from mnist_dataset import MNIST
 from weights_dataset import WeightsData
 
 from feed_forward_nn import build_feedforward_model
+from gan_nn import build_gan_model, sample_noise
+
 
 # dont want to spend a million years catching up on tensorflow's new api's...
 tf.disable_v2_behavior()
@@ -96,65 +98,7 @@ batch_dimension_size = None # this lets us have a variable batch size in all our
 ========================================================================================
 MODEL:
 ========================================================================================
-
-Define the model graph:
-
-NOTE: 
-usually when dealing with neural nets, we input BATCHES of data to make the training process go quicker,
-which introduces an extra leading dimension...
 '''
-
-# def build_feedforward_model (model_name):
-#     with tf.variable_scope(model_name):
-
-#         # the input layer
-#         input_layer = tf.placeholder(tf.float32, [batch_dimension_size, dataset.img_res_flat])
-
-#         # the weights and biases of the hidden layer to be trained
-#         weights = tf.get_variable("weights", [dataset.img_res_flat, dataset.num_classes])
-#         biases = tf.get_variable("biases", [dataset.num_classes])
-
-#         # the actual multiplication that happens in the hidden layer
-#         outputs = tf.matmul(input_layer, weights) + biases
-#         # the outputs above is a 2d array of size [batch_dimension_size, num_classes], where each 
-#         # index is the probability (from 0.0 to 1.0) that the input is that 
-#         # corresponding label
-
-#         # in order to interpret the outputs as a probability, we need to run it
-#         # through a softmax function, 
-#         probabilities = tf.nn.softmax(outputs)
-
-#         # we then get the index of the highest probability
-#         prediction = tf.argmax(probabilities, axis=1)
-
-#         # for training we need the target label (true label) for each input in the batch
-#         target_output = tf.placeholder(tf.int64, [batch_dimension_size])
-
-#         # to compute the loss to minimize we first calculate the cross entropy
-#         # between the target_outputs and the outputs the model predicted
-#         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=outputs, labels=target_output)
-
-#         # the overall loss is the average of the cross_entropy of all the samples we input into the model:
-#         loss = tf.reduce_mean(cross_entropy)
-
-#         # in order to perform the backpropagation and weight value modification, we use tensorflow's optimizers
-#         optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
-#         optimize = optimizer.minimize(loss)
-
-#         # we need an accuracy metric, so we create a boolean value for whetehr each batch was
-#         # predicted correctly
-#         correct_prediction = tf.equal(target_output, prediction)
-
-#         # we then cast that to floats (0 for falst, 1 for true)
-#         # and get the average of all the values for the batch, getting us the accuracy 
-#         # for the predictions in that batch
-#         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-#         # variable_initializer = tf.global_variables_initializer()
-#         variable_initializer = tf.initialize_variables([weights, biases] + optimizer.variables())
-
-#     return variable_initializer, input_layer, prediction, optimize, target_output, accuracy, weights, biases
-
 
 # build the model graph
 variable_initializer, input_layer, prediction, optimizer, target_output, accuracy, _, _ = build_feedforward_model("nn-demo", dataset.num_classes, dataset.img_res_flat)
@@ -277,92 +221,92 @@ by having it train on the mnist dataset:
 '''
 
 # Sample noise from uniform distribution
-def sample_noise(batch_size, noise_size):
-    return np.random.uniform(-1., 1., size=[batch_size, noise_size])
+# def sample_noise(batch_size, noise_size):
+#     return np.random.uniform(-1., 1., size=[batch_size, noise_size])
 
 '''
 ========================================================================================
 MODEL:
 
+for the sake of brevity
 anything concerning the discriminator will be prefixed with `d_`
 and anything concerning the generator will be prefixed with `g_` 
-for the sake of brevity
 ========================================================================================
 '''
 
 input_noise_dimension = 100
 
-def build_gan_model (gan_name, data_size_flat, generator_activation_fn=tf2.nn.sigmoid):
+# def build_gan_model (gan_name, data_size_flat, generator_activation_fn=tf2.nn.sigmoid):
 
-    def hidden_layer (name, input_layer, output_size, activation=tf2.nn.leaky_relu):
-        with tf.variable_scope(name):
-            weights = tf.get_variable("weights", [input_layer.shape[-1], output_size])
-            biases = tf.get_variable("biases", [output_size])
-            outputs = tf.matmul(input_layer, weights) + biases
-            # hidden layers require a function at the end to normalize the data
-            outputs = activation(outputs)
-            return outputs
+#     def hidden_layer (name, input_layer, output_size, activation=tf2.nn.leaky_relu):
+#         with tf.variable_scope(name):
+#             weights = tf.get_variable("weights", [input_layer.shape[-1], output_size])
+#             biases = tf.get_variable("biases", [output_size])
+#             outputs = tf.matmul(input_layer, weights) + biases
+#             # hidden layers require a function at the end to normalize the data
+#             outputs = activation(outputs)
+#             return outputs
         
 
-    def generator(input_layer):
-        with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
-            h1 = hidden_layer('layer1', input_layer, 128)
-            image = hidden_layer('image', h1, data_size_flat, generator_activation_fn)
-        return image
+#     def generator(input_layer):
+#         with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
+#             h1 = hidden_layer('layer1', input_layer, 128)
+#             image = hidden_layer('image', h1, data_size_flat, generator_activation_fn)
+#         return image
 
 
-    def discriminator(input_layer):
-        with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
-            h1 = hidden_layer('layer1', input_layer, 128)
-            # prediction output size is 1 values (either 0 or 1)
-            logits = hidden_layer('prediction', h1, 1, tf.identity)
-        return logits
+#     def discriminator(input_layer):
+#         with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
+#             h1 = hidden_layer('layer1', input_layer, 128)
+#             # prediction output size is 1 values (either 0 or 1)
+#             logits = hidden_layer('prediction', h1, 1, tf.identity)
+#         return logits
 
-    with tf.variable_scope(gan_name):
+#     with tf.variable_scope(gan_name):
 
-        # nosie sample to feed into the generator
-        input_noise = tf.placeholder(tf.float32, [batch_dimension_size, input_noise_dimension])
+#         # nosie sample to feed into the generator
+#         input_noise = tf.placeholder(tf.float32, [batch_dimension_size, input_noise_dimension])
 
-        # the generated image from our NN
-        generated_image = generator(input_noise)
+#         # the generated image from our NN
+#         generated_image = generator(input_noise)
 
-        # a real datapoint form the dataset
-        real_data = tf.placeholder(tf.float32, [batch_dimension_size, data_size_flat])
+#         # a real datapoint form the dataset
+#         real_data = tf.placeholder(tf.float32, [batch_dimension_size, data_size_flat])
 
-        # prediction as to whether th real image is real or fake
-        logits_real = discriminator(real_data)
+#         # prediction as to whether th real image is real or fake
+#         logits_real = discriminator(real_data)
 
-        # prediction as to whether the generated image is real or fake
-        logits_fake = discriminator(generated_image)
+#         # prediction as to whether the generated image is real or fake
+#         logits_fake = discriminator(generated_image)
 
-        # calculate loss
-        # discriminator loss for real input is how far discriminator is from labeling it it as "real"
-        D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real, labels=tf.ones_like(logits_real)*0.9)) #Smoothing for generalization
-        # discriminator loss for generated input is how far discriminator is from labeling it it as "fake"
-        D_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.zeros_like(logits_fake)))
-        # combine the discriminator loss
-        d_loss = D_loss_real + D_loss_fake
+#         # calculate loss
+#         # discriminator loss for real input is how far discriminator is from labeling it it as "real"
+#         D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real, labels=tf.ones_like(logits_real)*0.9)) #Smoothing for generalization
+#         # discriminator loss for generated input is how far discriminator is from labeling it it as "fake"
+#         D_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.zeros_like(logits_fake)))
+#         # combine the discriminator loss
+#         d_loss = D_loss_real + D_loss_fake
 
-        # generator loss is how far discriminator is from labeling generated image it as "real"
-        g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.ones_like(logits_fake)))
+#         # generator loss is how far discriminator is from labeling generated image it as "real"
+#         g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.ones_like(logits_fake)))
 
-        # we need to seperate the weights of the discriminator and generator
-        # in order to train them differently
-        train_vars = tf.trainable_variables()
-        d_weights = [var for var in train_vars if var.name.startswith(gan_name + "/disc")]
-        g_weights = [var for var in train_vars if var.name.startswith(gan_name + "/gen")]
+#         # we need to seperate the weights of the discriminator and generator
+#         # in order to train them differently
+#         train_vars = tf.trainable_variables()
+#         d_weights = [var for var in train_vars if var.name.startswith(gan_name + "/disc")]
+#         g_weights = [var for var in train_vars if var.name.startswith(gan_name + "/gen")]
 
-        # optimizers
-        opt_d = tf.train.AdamOptimizer()
-        opt_g = tf.train.AdamOptimizer()
-        d_optimizer = opt_d.minimize(d_loss, var_list=d_weights)
-        g_optimizer = opt_g.minimize(g_loss, var_list=g_weights)
+#         # optimizers
+#         opt_d = tf.train.AdamOptimizer()
+#         opt_g = tf.train.AdamOptimizer()
+#         d_optimizer = opt_d.minimize(d_loss, var_list=d_weights)
+#         g_optimizer = opt_g.minimize(g_loss, var_list=g_weights)
 
-        variable_initializer = tf.initialize_variables(g_weights + d_weights + opt_d.variables() + opt_g.variables())
+#         variable_initializer = tf.initialize_variables(g_weights + d_weights + opt_d.variables() + opt_g.variables())
 
-    return variable_initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data
+#     return variable_initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data
 
-variable_initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data = build_gan_model("gan-demo", dataset.img_res_flat)
+variable_initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data = build_gan_model("gan-demo", dataset.img_res_flat, input_noise_dimension)
 
 
 '''
@@ -380,14 +324,18 @@ session.run(variable_initializer)
 def train_gan(num_iterations, batch_size, debug_frequency):
     debug_batch_size = 25 # 5x5
     debug_noise = sample_noise(debug_batch_size, input_noise_dimension)
+    gen_imgs = []
 
     for i in range(num_iterations):
         # make sure we have a lot of images from the beginning when changes happen quickly
-        if i % debug_frequency == 0 or i == num_iterations - 1 or (i < 10000 and i % 1000 == 0):
+        if i % debug_frequency == 0 or i == num_iterations - 1:# or (i < 10000 and i % 1000 == 0):
             debug_imgs = session.run(generated_image, feed_dict={ input_noise: debug_noise })
             debug_imgs = debug_imgs.reshape(debug_img_reshape)
             debug_imgs = batches_2_grid(debug_imgs, grid_res=5)
-            save_img(debug_imgs, "mnist_gen_{0}".format(i), directory="images/gan-gen/")
+
+            gen_imgs.append(debug_imgs)
+            # save_img(debug_imgs, "mnist_gen_{0}".format(i), directory="images/gan-gen/")
+
             
         # get a batch of training samples
         input_batch, _ = dataset.get_random_training_batch(batch_size)
@@ -400,7 +348,13 @@ def train_gan(num_iterations, batch_size, debug_frequency):
         sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.flush()
 
-# train_gan(100000, 32, 10000)
+    print("Creating Progress GIF")
+    # create_gif_from_images(get_images_from_dir("images/gan-gen/"), "images/", "gan-demo")
+    create_gif_from_images(gen_imgs, "images/", "gan-demo")
+
+
+
+train_gan(10000, 32, 100)
 
 # cleanup tensorflow resources
 session.close()
@@ -525,11 +479,10 @@ MODEL:
 ========================================================================================
 '''
 
-
 '''
 build the feed forward neural network that will test out the Athena generated weight matrices:
-similar to the simple feed forward model above, except we strip out the training specific operations
-and make the weights and biases assignable
+similar to the simple feed forward model implemented in feed_forward_nn.py, except we strip out the 
+training specific operations and make the weights and biases assignable
 
 anything concerning this TestNN model will be prefixed with `tnn_`
 '''
@@ -554,21 +507,14 @@ def build_testNN ():
         weights.load(generated_weights[:dataset.img_res_flat], session)
         biases.load(generated_weights[-1], session)
 
-
     return input_layer, prediction, target_output, accuracy, weights_loader
 
 
-weights_gen_flat_size = (dataset.img_res_flat + 1) * dataset.num_classes
 # build Athena
-a_initializer, a_d_optimizer, a_g_optimizer, a_d_loss, a_g_loss, a_generated_weights, a_input_noise, a_real_data = build_gan_model("athena", weights_gen_flat_size, tf.nn.tanh)
+a_initializer, a_d_optimizer, a_g_optimizer, a_d_loss, a_g_loss, a_generated_weights, a_input_noise, a_real_data = build_gan_model("athena", weights_data.flat_size, input_noise_dimension, tf.nn.tanh)
 
 # build testNN
 tnn_input, tnn_prediction, tnn_target, tnn_accuracy, tnn_load_weights = build_testNN()
-
-# build the dataNN that will supply us with trained weight data
-# d_initializer, d_input, _, d_optimizer, d_target, d_accuracy, d_weights, d_biases = build_feedforward_model('DataNN')
-
-
 
 '''
 ========================================================================================
@@ -577,73 +523,7 @@ TRAINING / TESTING:
 '''
 session = tf.Session()
 
-# session.run([d_initializer, a_initializer])
-session.run([a_initializer])
-
-
-# def test_dataNN_accuracy ():
-#     return session.run(d_accuracy, feed_dict={
-#         d_input: dataset.x_test,
-#         d_target: dataset.y_test
-#     })
-
-# def get_average_untrained_accuracy(samples=100):
-#     # reinitialize the weights of dataNN
-#     session.run(d_initializer)
-#     accuracies = np.zeros([samples])
-#     for i in range(samples):
-#         accuracies[i] = session.run(d_accuracy, feed_dict={
-#             d_input: dataset.x_test,
-#             d_target: dataset.y_test
-#         })
-#     return np.mean(accuracies)
-
-
-# def generate_trained_weights(iteration, datapoint_batch_size, batch_size=32, accuracy_test_frequency=100, min_accuracy=.9):
-#     # reinitialize the weights of dataNN
-#     session.run(d_initializer)
-
-#     acc = 0
-#     i = 0
-#     while acc < min_accuracy:
-#         if i % accuracy_test_frequency == 0:
-#             acc = test_dataNN_accuracy()
-            
-#         sys.stdout.write("\rTraining Datapoint {0}/{1} i:{2}:: Test Accuracy: {3:.1%} ==========".format(iteration+1, datapoint_batch_size, i, acc))
-#         sys.stdout.flush()
-
-#         input_batch, labels_batch = dataset.get_random_training_batch(batch_size)
-
-#         # run the optimization iteration for this batch
-#         session.run(d_optimizer, feed_dict={
-#             d_input: input_batch,
-#             d_target: labels_batch
-#         })
-#         i+=1
-
-#     # if we got here, model achieved at least 90% accuracy on test set
-#     final_weights, final_biases = session.run([d_weights, d_biases])
-
-#     # append the weights and biases as one matrix
-
-#     final_wb = np.zeros([dataset.img_res_flat + 1, dataset.num_classes])
-#     final_wb[:-1] = final_weights
-#     final_wb[-1] = final_biases
-#     # final_weights.append(final_biases)
-
-#     return final_wb
-
-# def generate_athena_training_batch (batch_size):
-#     # allocate the batch and populate it
-#     batch = np.zeros( [batch_size, dataset.img_res_flat + 1, dataset.num_classes ] )
-
-#     for i in range(batch_size):
-#         batch[i] = generate_trained_weights(i, batch_size)
-
-#     print ("batch min / max: {0:.1}/{1:.1}".format(batch.min(), batch.max()))
-
-#     # reshape the batch so it's in it's 'flat' form
-#     return batch.reshape([-1, weights_gen_flat_size])
+session.run(a_initializer)
 
 def test_testNN_accuracy(gen_weights):
     tnn_load_weights(gen_weights, session)
@@ -678,7 +558,6 @@ def train_athena(num_iterations, batch_size, debug_frequency):
             
             
         # get a batch of training samples
-        # input_batch = generate_athena_training_batch(batch_size)
         input_batch = weights_data.get_random_batch(batch_size)
 
         # train the discriminator
@@ -686,13 +565,10 @@ def train_athena(num_iterations, batch_size, debug_frequency):
         # train the generator
         _, gen_loss = session.run([a_g_optimizer, a_g_loss], feed_dict={ a_input_noise: sample_noise(batch_size, input_noise_dimension) })
 
-        # print("Athena Training Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.write("\rAthena Training Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.flush()
 
     return iterations, gen_accuracy_tracked
-
-# untrained_average_accuracy = get_average_untrained_accuracy()
 
 iterations, generated_accuracies = train_athena(num_iterations=1000, batch_size=8, debug_frequency=100)
 

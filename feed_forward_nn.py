@@ -1,6 +1,6 @@
 '''
 this file shows the code for constructing a simple feed forward neural net, with one layer.
-this is sometimes referred to as a "Linear Regression Model"
+these models are sometimes referred to as a "Linear Regression Model"
 '''
 
 import tensorflow as tf2
@@ -74,7 +74,7 @@ def build_feedforward_model (model_name, num_classes, input_size):
         # for the predictions in that batch
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-        variable_initializer = tf.global_variables_initializer()
+        initializer = tf.global_variables_initializer()
         
-    return variable_initializer, input_layer, prediction, optimize, target_output, accuracy, weights, biases
+    return initializer, input_layer, prediction, optimize, target_output, accuracy, weights, biases
 

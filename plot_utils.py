@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import os
 from PIL import Image
 import numpy as np
+import glob
 
 # debug 9 images with some labels
 def plot_9_imgs(images, labels, labels_prefix, name, directory="images/"):
@@ -21,8 +22,6 @@ def plot_9_imgs(images, labels, labels_prefix, name, directory="images/"):
     
     plt.savefig(directory + name + '.png')
     plt.clf()
-    # plt.cla()
-    # plt.close()
 
 # save a numpy array as an image file on disk
 def save_img(image, name, directory="images/"):
@@ -51,9 +50,6 @@ def batches_2_grid (batches, grid_res):
         result[x_start:x_end, y_start:y_end] = batches[i]
     return result
 
-
-
-
 def plot_accuracy_graph(iterations, accuracies, baseline, directory="images/"):
 
     plt.plot(iterations, accuracies, label='Generated Weights')
@@ -68,5 +64,21 @@ def plot_accuracy_graph(iterations, accuracies, baseline, directory="images/"):
 
     plt.savefig(directory + 'AthenaProgress.png')
     plt.clf()
-    # plt.cla()
-    # plt.close()
+
+
+
+def create_gif_from_images(images, duration, directory, name):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    images = [Image.fromarray((image * 255).astype(np.uint8)).convert("P") for image in images]
+    # images[0].save(directory + name + '.gif', save_all=True, append_images=images[1:], optimize=False, duration=500, loop=0)
+    images[0].save(directory + name + '.gif', save_all=True, append_images=images[1:], optimize=False, duration=((duration * 1000) / len(images)), loop=0)
+
+# def get_images_from_dir(directory):
+#     items = sorted(glob.glob(directory + '*.jpg'), key=os.path.getmtime)
+#     return [Image.open(item).convert('P') for item in items]
+
+
+
+
+
