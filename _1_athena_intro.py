@@ -90,7 +90,7 @@ debug_img_reshape = [-1, dataset.img_res, dataset.img_res]
 
 # check if the data is correct:
 images, labels = dataset.get_random_training_batch(9)
-plot_9_imgs(images.reshape(debug_img_reshape), labels, "Label", "CheckData")
+plot_9_imgs(images.reshape(debug_img_reshape), labels, "Label", "assert-data")
 
 batch_dimension_size = None # this lets us have a variable batch size in all our models
 
@@ -159,21 +159,21 @@ def train_model(num_iterations, batch_size, accuracy_test_frequency):
 
         # run the optimization iteration for this batch
         session.run(optimizer, feed_dict=feed_dict)
-        
+
     return iterations, accuracies
 
 
 # see how the model makes predictions before training
-debug_prediction("NNUntrained")
+debug_prediction("feedforward-nn-untrained-preds")
 
 # trian the model
 iterations, accuracies = train_model(num_iterations=1000, batch_size=32, accuracy_test_frequency=100)
 
-plot_accuracy_graph(iterations, accuracies, None, 'FeedForwardNN')
+plot_accuracy_graph(iterations, accuracies, None, 'feedforward-nn-acc')
 
 
 # debug again, this time the predictions should be more accurate
-debug_prediction("NNTrained")
+debug_prediction("feedforward-nn-trained-preds")
 
 # cleanup tensorflow resources
 session.close()
@@ -255,10 +255,12 @@ def train_gan(num_iterations, batch_size, debug_frequency):
     debug_batch_size = 25 # 5x5
     debug_noise = sample_noise(debug_batch_size, input_noise_dimension)
     gen_imgs = []
+    iterations = []
+    g_losses = []
+    d_losses = []
 
     for i in range(num_iterations):
-        # make sure we have a lot of images from the beginning when changes happen quickly
-        if i % debug_frequency == 0 or i == num_iterations - 1:# or (i < 10000 and i % 1000 == 0):
+        if i % debug_frequency == 0 or i == num_iterations - 1:
             debug_imgs = session.run(generated_image, feed_dict={ input_noise: debug_noise })
             debug_imgs = debug_imgs.reshape(debug_img_reshape)
             debug_imgs = batches_2_grid(debug_imgs, grid_res=5)
@@ -275,9 +277,17 @@ def train_gan(num_iterations, batch_size, debug_frequency):
         sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.flush()
 
-    create_gif_from_images(gen_imgs, 10, "images/", "gan-demo")
+        if i % debug_frequency == 0 or i == num_iterations - 1:
+            iterations.append(i)
+            g_losses.append(gen_loss)
+            d_losses.append(disc_loss)
 
-train_gan(10000, 32, 100)
+    create_gif_from_images(gen_imgs, 10, "gan-demo")
+    return iterations, g_losses, d_losses
+
+iterations, g_losses, d_losses = train_gan(10000, 32, 100)
+plot_gan_losses(iterations, g_losses, d_losses, 'gan-demo-losses')
+
 
 # cleanup tensorflow resources
 session.close()
@@ -467,9 +477,10 @@ def train_athena(num_iterations, batch_size, debug_frequency):
 
     gen_accuracy_tracked = []
     iterations = []
+    g_losses = []
+    d_losses = []
 
     for i in range(num_iterations):
-        # make sure we have a lot of images from the beginning when changes happen quickly
         if i % debug_frequency == 0 or i == num_iterations - 1:
             gen_weights = session.run(a_generated_weights, feed_dict={ a_input_noise: debug_noise })
             gen_weights = gen_weights.reshape([-1, dataset.img_res_flat + 1, dataset.num_classes])
@@ -491,11 +502,20 @@ def train_athena(num_iterations, batch_size, debug_frequency):
         sys.stdout.write("\rAthena Training Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.flush()
 
-    return iterations, gen_accuracy_tracked
+        if i % debug_frequency == 0 or i == num_iterations - 1:
+            d_losses.append(disc_loss)
+            g_losses.append(gen_loss)
 
-iterations, generated_accuracies = train_athena(num_iterations=1000, batch_size=8, debug_frequency=100)
+    return iterations, gen_accuracy_tracked, g_losses, d_losses
 
-plot_accuracy_graph(iterations, generated_accuracies, untrained_average_accuracy)
+iterations, generated_accuracies, g_losses, d_losses = train_athena(num_iterations=1000, batch_size=8, debug_frequency=100)
+
+plot_accuracy_graph(iterations, generated_accuracies, untrained_average_accuracy, 'athena-gen-acc')
+
+plot_gan_losses(iterations, g_losses, d_losses, 'athena-losses')
+
+
+
 
 # debug a model built by athena
 gen_weights = session.run(a_generated_weights, feed_dict={ a_input_noise: sample_noise(1, input_noise_dimension) })
@@ -504,7 +524,7 @@ tnn_load_weights(gen_weights, session)
 
 x_test, _ = dataset.get_random_testing_batch(9)
 pred = session.run(tnn_prediction, feed_dict={ tnn_input: x_test })
-plot_9_imgs(x_test.reshape(debug_img_reshape), pred, "Prediction", 'AthenaGeneratedPredictions')
+plot_9_imgs(x_test.reshape(debug_img_reshape), pred, "Prediction", 'athena-gen-preds')
 
 
 # cleanup tensorflow resources

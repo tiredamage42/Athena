@@ -29,11 +29,10 @@ def plot_9_imgs(images, labels, labels_prefix, name):
     plt.clf()
 
 # save a numpy array as an image file on disk
-def save_img(image, name):
-    assert_images_dir()
-    
-    im = Image.fromarray((image * 255).astype(np.uint8)).convert("L")
-    im.save(imgs_dir + name + '.jpg')
+# def save_img(image, name):
+#     assert_images_dir()
+#     im = Image.fromarray((image * 255).astype(np.uint8)).convert("L")
+#     im.save(imgs_dir + name + '.jpg')
 
 # helper function to take images in shape [batches, res, res]
 # to shape [res * squareroot(batches), res *  squareroot(batches)] grid
@@ -72,6 +71,25 @@ def plot_accuracy_graph(iterations, accuracies, baseline, name):
 
     plt.savefig(imgs_dir + name + '.png')
     plt.clf()
+
+
+def plot_gan_losses(iterations, g_losses, d_losses, name):
+    assert_images_dir()
+    
+    plt.plot(iterations, g_losses, label='Generator')
+    plt.plot(iterations, d_losses, label='Discriminator')
+
+
+    plt.xlabel('Iteration')
+    plt.ylabel('Loss')
+
+    plt.legend(loc=4)
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.savefig(imgs_dir + name + '.png')
+    plt.clf()
+
 
 def create_gif_from_images(images, duration, name):
     assert_images_dir()
