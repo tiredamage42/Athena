@@ -20,6 +20,9 @@ def plot_9_imgs(images, labels, labels_prefix, name, directory="images/"):
         ax.set_yticks([])
     
     plt.savefig(directory + name + '.png')
+    plt.clf()
+    # plt.cla()
+    # plt.close()
 
 # save a numpy array as an image file on disk
 def save_img(image, name, directory="images/"):
@@ -64,3 +67,6 @@ def plot_accuracy_graph(iterations, accuracies, baseline, directory="images/"):
     plt.tight_layout()
 
     plt.savefig(directory + 'AthenaProgress.png')
+    plt.clf()
+    # plt.cla()
+    # plt.close()
