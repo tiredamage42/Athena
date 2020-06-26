@@ -85,18 +85,18 @@ if __name__ == "__main__":
     '''
     import sys
     from image_utils import plot_9_imgs, plot_accuracy_graph
-    from mnist_dataset import MNIST
+    import mnist_dataset
 
     '''
     ========================================================================================
     DATA:
     ========================================================================================
     '''
-    mnist = MNIST()
+    mnist = mnist_dataset.MNIST()
 
     # check if the data is correct:
     images, labels = mnist.get_random_training_batch(9)
-    plot_9_imgs(images.reshape([-1, mnist.img_res, mnist.img_res]), labels, "Label", "feedforward-nn-assert-data")
+    plot_9_imgs(images.reshape([-1, mnist_dataset.img_res, mnist_dataset.img_res]), labels, "Label", "feedforward-nn-assert-data")
 
     '''
     ========================================================================================
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     ========================================================================================
     '''
     # build the model graph
-    initializer, input_layer, prediction, optimizer, target_output, accuracy, _, _ = build_feedforward_model("nn-demo", mnist.num_classes, mnist.img_res_flat)
+    initializer, input_layer, prediction, optimizer, target_output, accuracy, _, _ = build_feedforward_model("nn-demo", mnist_dataset.num_classes, mnist_dataset.img_res_flat)
 
     '''
     ========================================================================================
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     def visualize_random_predictions(name):
         x_test, _ = mnist.get_random_testing_batch(9)
         pred = session.run(prediction, feed_dict={ input_layer: x_test })
-        plot_9_imgs(x_test.reshape([-1, mnist.img_res, mnist.img_res]), pred, "Prediction", name)
+        plot_9_imgs(x_test.reshape([-1, mnist_dataset.img_res, mnist_dataset.img_res]), pred, "Prediction", name)
 
 
     # test the accuracy of the predictions on the test set (so we know that the model is actually

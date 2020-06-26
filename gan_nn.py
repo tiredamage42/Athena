@@ -112,7 +112,7 @@ if __name__ == "__main__":
     '''
     import sys
     from image_utils import batches_2_grid, create_gif_from_images, plot_gan_losses
-    from mnist_dataset import MNIST
+    import mnist_dataset
     
     input_noise_size = 100
 
@@ -121,15 +121,15 @@ if __name__ == "__main__":
     DATA:
     ========================================================================================
     '''
-    mnist = MNIST()
-    debug_img_reshape = [-1, mnist.img_res, mnist.img_res]
+    mnist = mnist_dataset.MNIST()
+    debug_img_reshape = [-1, mnist_dataset.img_res, mnist_dataset.img_res]
 
     '''
     ========================================================================================
     MODEL:
     ========================================================================================
     '''
-    initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data = build_gan_model("gan-demo", mnist.img_res_flat, input_noise_size)
+    initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data = build_gan_model("gan-demo", mnist_dataset.img_res_flat, input_noise_size)
 
     '''
     ========================================================================================

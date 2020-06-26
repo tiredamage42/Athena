@@ -2,15 +2,16 @@
     a file to handle the weights dataset
 '''
 import numpy as np
+import mnist_dataset
+
+flat_size = (mnist_dataset.img_res_flat + 1) * mnist_dataset.num_classes
 
 class WeightsData:
 
-    # mnist's (img_res_flat + 1) * num_classes
-    flat_size = ((28 * 28) + 1) * 10
     
     def __init__ (self):
-        # load dictionary of arrays and extract the first array
         self.data = np.load('datasets/weights_dataset.npz')['arr_0']
+        print ('Weights dataset loaded, entries: {0}'.format(len(self.data)))
 
     # helper functions for getting random data batches
     def get_random_batch(self, batch_size):
@@ -32,22 +33,21 @@ if __name__ == "__main__":
     import os
     import tensorflow as tf2
     import tensorflow.compat.v1 as tf
-    from mnist_dataset import MNIST
+    import mnist_dataset
     from feed_forward_nn import build_feedforward_model
     tf.disable_v2_behavior()
 
     # how many data points to generate
     batch_amt = 100
 
-    mnist = MNIST()
+    mnist = mnist_dataset.MNIST()
 
-    initializer, input, _, optimizer, target, accuracy, weights, biases = build_feedforward_model('DataNN', mnist.num_classes, mnist.img_res_flat)
+    initializer, input, _, optimizer, target, accuracy, weights, biases = build_feedforward_model('DataNN', mnist_dataset.num_classes, mnist_dataset.img_res_flat)
 
     session = tf.Session()
 
     # allocate the final dataset ahead of time
-    weights_dataset = np.zeros([batch_amt, mnist.img_res_flat + 1, mnist.num_classes])
-    print ('\nDataset Size: {0} MB\n'.format(weights_dataset.nbytes/(1024.0 * 1024.0)))
+    weights_dataset = np.zeros([batch_amt, mnist_dataset.img_res_flat + 1, mnist_dataset.num_classes])
 
     def generate_trained_weights(i, batch_size=32, accuracy_test_frequency=100, min_accuracy=.9):
         # reinitialize the weights
@@ -96,7 +96,7 @@ if __name__ == "__main__":
                 file_name = ".".join([part_1, split[1]])
             if not os.path.isfile(file_name):
                 # reshape the dataset so it's in it's 'flat' form
-                np.savez_compressed(file_name, weights_dataset.reshape([-1, (mnist.img_res_flat + 1) * mnist.num_classes]))
+                np.savez_compressed(file_name, weights_dataset.reshape([-1, flat_size]))
             else:
                 check_and_rename(original_file, add+1)
 

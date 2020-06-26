@@ -13,15 +13,15 @@ MNIST Contains:
 x inputs are [28, 28] uint8 arrays range (0 - 255)
 y inputs are uint8 values in range (0 - 9), the label for each corresponding image
 '''
+# the dataset's image resolution
+img_res = 28
+
+# we need to reshape teh iamges into one long array of values of length: (28 * 28)
+img_res_flat = img_res * img_res
+
+# how many types of labels there are
+num_classes = 10
 class MNIST:
-    # the dataset's image resolution
-    img_res = 28
-
-    # we need to reshape teh iamges into one long array of values of length: (28 * 28)
-    img_res_flat = img_res * img_res
-
-    # how many types of labels there are
-    num_classes = 10
     
     def __init__ (self):
 
@@ -34,7 +34,7 @@ class MNIST:
         # reshape images to single dimension then normalize the pixel values
         # from [0,255] to the [0.0,1.0] range.
         def prepare_imgs(imgs):
-            return np.reshape(imgs, [-1, self.img_res_flat]) / 255.0
+            return np.reshape(imgs, [-1, img_res_flat]) / 255.0
 
         self.x_train, self.x_test = prepare_imgs(x_train), prepare_imgs(x_test)
 
