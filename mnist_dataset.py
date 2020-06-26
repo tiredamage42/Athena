@@ -24,8 +24,12 @@ class MNIST:
     num_classes = 10
     
     def __init__ (self):
+
+        if not os.path.exists('datasets/'):
+            os.makedirs('datasets/')
+    
         # load MNIST dataset to the current directory
-        (x_train, self.y_train), (x_test, self.y_test) = tf.keras.datasets.mnist.load_data(path=os.getcwd() + '/mnist.npz')
+        (x_train, self.y_train), (x_test, self.y_test) = tf.keras.datasets.mnist.load_data(path=os.getcwd() + '/datasets/mnist.npz')
 
         # reshape images to single dimension then normalize the pixel values
         # from [0,255] to the [0.0,1.0] range.

@@ -2,6 +2,7 @@
     a file to handle the weights dataset
 '''
 import numpy as np
+
 class WeightsData:
 
     # mnist's (img_res_flat + 1) * num_classes
@@ -9,9 +10,8 @@ class WeightsData:
     
     def __init__ (self):
         # load dictionary of arrays and extract the first array
-        self.weights_dataset = np.load('weights_dataset.npz')['arr_0']
-        print("\nDATASET SHAPE {0}\n".format(self.weights_dataset.shape))
+        self.data = np.load('datasets/weights_dataset.npz')['arr_0']
 
     # helper functions for getting random data batches
     def get_random_batch(self, batch_size):
-        return self.weights_dataset[np.random.choice(np.arange(len(self.weights_dataset)), batch_size, replace=False)]
+        return self.data[np.random.choice(np.arange(len(self.data)), batch_size, replace=False)]

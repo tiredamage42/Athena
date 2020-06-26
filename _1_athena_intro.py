@@ -2,7 +2,7 @@ import sys
 import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 import numpy as np
-from plot_utils import plot_9_imgs, save_img, batches_2_grid, plot_accuracy_graph, create_gif_from_images, get_images_from_dir
+from plot_utils import plot_9_imgs, save_img, batches_2_grid, plot_accuracy_graph, create_gif_from_images
 from mnist_dataset import MNIST
 from weights_dataset import WeightsData
 
@@ -220,94 +220,15 @@ Below we'll create and train a GAN to generate novel images of handwritten digit
 by having it train on the mnist dataset:
 '''
 
-# Sample noise from uniform distribution
-# def sample_noise(batch_size, noise_size):
-#     return np.random.uniform(-1., 1., size=[batch_size, noise_size])
-
 '''
 ========================================================================================
 MODEL:
-
-for the sake of brevity
-anything concerning the discriminator will be prefixed with `d_`
-and anything concerning the generator will be prefixed with `g_` 
 ========================================================================================
 '''
 
 input_noise_dimension = 100
 
-# def build_gan_model (gan_name, data_size_flat, generator_activation_fn=tf2.nn.sigmoid):
-
-#     def hidden_layer (name, input_layer, output_size, activation=tf2.nn.leaky_relu):
-#         with tf.variable_scope(name):
-#             weights = tf.get_variable("weights", [input_layer.shape[-1], output_size])
-#             biases = tf.get_variable("biases", [output_size])
-#             outputs = tf.matmul(input_layer, weights) + biases
-#             # hidden layers require a function at the end to normalize the data
-#             outputs = activation(outputs)
-#             return outputs
-        
-
-#     def generator(input_layer):
-#         with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
-#             h1 = hidden_layer('layer1', input_layer, 128)
-#             image = hidden_layer('image', h1, data_size_flat, generator_activation_fn)
-#         return image
-
-
-#     def discriminator(input_layer):
-#         with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
-#             h1 = hidden_layer('layer1', input_layer, 128)
-#             # prediction output size is 1 values (either 0 or 1)
-#             logits = hidden_layer('prediction', h1, 1, tf.identity)
-#         return logits
-
-#     with tf.variable_scope(gan_name):
-
-#         # nosie sample to feed into the generator
-#         input_noise = tf.placeholder(tf.float32, [batch_dimension_size, input_noise_dimension])
-
-#         # the generated image from our NN
-#         generated_image = generator(input_noise)
-
-#         # a real datapoint form the dataset
-#         real_data = tf.placeholder(tf.float32, [batch_dimension_size, data_size_flat])
-
-#         # prediction as to whether th real image is real or fake
-#         logits_real = discriminator(real_data)
-
-#         # prediction as to whether the generated image is real or fake
-#         logits_fake = discriminator(generated_image)
-
-#         # calculate loss
-#         # discriminator loss for real input is how far discriminator is from labeling it it as "real"
-#         D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real, labels=tf.ones_like(logits_real)*0.9)) #Smoothing for generalization
-#         # discriminator loss for generated input is how far discriminator is from labeling it it as "fake"
-#         D_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.zeros_like(logits_fake)))
-#         # combine the discriminator loss
-#         d_loss = D_loss_real + D_loss_fake
-
-#         # generator loss is how far discriminator is from labeling generated image it as "real"
-#         g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.ones_like(logits_fake)))
-
-#         # we need to seperate the weights of the discriminator and generator
-#         # in order to train them differently
-#         train_vars = tf.trainable_variables()
-#         d_weights = [var for var in train_vars if var.name.startswith(gan_name + "/disc")]
-#         g_weights = [var for var in train_vars if var.name.startswith(gan_name + "/gen")]
-
-#         # optimizers
-#         opt_d = tf.train.AdamOptimizer()
-#         opt_g = tf.train.AdamOptimizer()
-#         d_optimizer = opt_d.minimize(d_loss, var_list=d_weights)
-#         g_optimizer = opt_g.minimize(g_loss, var_list=g_weights)
-
-#         variable_initializer = tf.initialize_variables(g_weights + d_weights + opt_d.variables() + opt_g.variables())
-
-#     return variable_initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data
-
 variable_initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data = build_gan_model("gan-demo", dataset.img_res_flat, input_noise_dimension)
-
 
 '''
 ========================================================================================
@@ -348,11 +269,7 @@ def train_gan(num_iterations, batch_size, debug_frequency):
         sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.flush()
 
-    print("Creating Progress GIF")
-    # create_gif_from_images(get_images_from_dir("images/gan-gen/"), "images/", "gan-demo")
-    create_gif_from_images(gen_imgs, "images/", "gan-demo")
-
-
+    create_gif_from_images(gen_imgs, 10, "images/", "gan-demo")
 
 train_gan(10000, 32, 100)
 

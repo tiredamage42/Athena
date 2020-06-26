@@ -74,5 +74,8 @@ session.close()
 # reshape the dataset so it's in it's 'flat' form
 weights_dataset = weights_dataset.reshape([weights_dataset_size, (dataset.img_res_flat + 1) * dataset.num_classes])
 
+if not os.path.exists('datasets/'):
+    os.makedirs('datasets/')
+    
 # save to npz file
-np.savez_compressed('weights_dataset.npz', weights_dataset)
+np.savez_compressed('datasets/weights_dataset.npz', weights_dataset)
