@@ -132,7 +132,7 @@ EXPLAIN DEMO IN gan_nn.py
 
 
 '''
-ATHENA
+THE ATHENA MODEL
 
 Like Prometheus creating humans from clay in Greek mythology, when we create these models,
 we are essentailly creating the blueprints (or husks) of the algorithms, 
@@ -149,11 +149,11 @@ GANs have been used to generate images that are strikingly similar to images fou
 Grayscale images are nothing more than 2 dimensional matrices of pixel float values,
 much the same as a hidden layer weights on a typical Neural Network!
 
-So, let's see if we can't train a GAN (Athena) to generate 2d matrices to be used as 
-weights in another NN model.
+So, let's see if we can't train a GAN to generate 2d matrices to be used as 
+weights in another NN model. We'll call it A-GAN (short for Athena-GAN)
 
 theoretically, given enough examples of weights from already trained and working models, 
-Athena should be able to create a completely novel set of values in one iteration that would be 
+this GAN should be able to create a completely novel set of values in one iteration that would be 
 comparable to the values that come from a model trained through the exhaustive backpropogation process
 
 NOTE:
@@ -164,19 +164,19 @@ so this might be a complete wash, but let's try it and find out!
 IMPLEMENTATION:
 
 Goal:
-the goal will be for Athena to create the weights of a model that can label the standard
+the goal will be for A-GAN to create the weights of a model that can label the standard
 benchmark for image recognition: the MNIST dataset ( a series of images of handwritten numbers from 
 0 - 9 ).
 
 first we'll see what the average accuracy is for several (let's say 100) untrained models 
 (completely random weight values) on the data set.
 
-If Athena can generate somehting with a noteable increase in accuracy, then we can consider this
+If A-GAN can generate somehting with a noteable increase in accuracy, then we can consider this
 experiment a success and think further about optimizations, improvements, or other use cases
 
 
 Generating Data:
-to generate the dataset that Athena will sample from to train, we need to first train
+to generate the dataset that A-GAN will sample from to train, we need to first train
 many neural nets to label the MNIST dataset.
 
 all these models will ahve one hidden layer each of the same dimensions, but since they are all
@@ -188,16 +188,16 @@ and start over.  when enough weights are stored, the entire dataset is saved to 
 
 
 Training:
-we will train Athena's Discriminator to tell the difference between a random set of values, and values
+we will train A-GAN's Discriminator to tell the difference between a random set of values, and values
 that would be an ideal candidate for hidden layer weights that can label the MNIST dataset.
 
-Athena's Generator will hopefully also learn how to generate values that can do so as well!
+A-GAN's Generator will hopefully also learn how to generate values that can do so as well!
 
 Testing and debugging throughout training:
 On the default graph, we'll have a special testing version of a FeedForward NN that can have its
 hidden layer weights assigned to ( TestNN ).
 
-We'll have Athena generate 10 different weights matrices, assign each of them to the TestNN weights,
+We'll have A-GAN generate 10 different weights matrices, assign each of them to the TestNN weights,
 and test TestNN agaisnt the MNIST dataset. we'll tehn print and track the average accuracy of all 10
 tests
 
@@ -217,7 +217,7 @@ CONCERNS:
 
 THINGS TO TRY IN THE FUTURE:
 - add support for biases along with weights
-- try and generate multi-layer networks with recurrent Athena Model
-- try a Cross-Domain Athena GAN to simulate the training process 
+- try and generate multi-layer networks with recurrent A-GAN Model
+- try a Cross-Domain A-GAN to simulate the training process 
     (maybe it can be taught to enhance the accuracy of an alread trained network)
 '''

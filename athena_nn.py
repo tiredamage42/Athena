@@ -1,5 +1,5 @@
 '''
-    this file builds, trains, and tests the Athena model as it attempts to generate weight matrices
+    this file builds, trains, and tests the A-GAN model as it attempts to generate weight matrices
     that can be used in feed forward neural nets to label the mnist dataset
 '''
 import sys
@@ -101,7 +101,7 @@ def build_testNN ():
     return input_layer, prediction, target_output, accuracy, weights_loader
 
 
-# build the Athena gan model
+# build the A-GAN model
 a_initializer, a_d_optimizer, a_g_optimizer, a_d_loss, a_g_loss, a_generated_weights, a_input_noise, a_real_data = build_gan_model("athena", weights_data.flat_size, input_noise_dimension, tf.nn.tanh)
 
 # build testNN
@@ -140,7 +140,7 @@ def run_training(num_iterations, batch_size, debug_frequency):
     # track the accuracy of the generated models over time
     gen_accuracy_tracked = []
 
-    # track teh gan losses over time
+    # track teh A-GAN losses over time
     g_losses = []
     d_losses = []
 
@@ -169,7 +169,7 @@ def run_training(num_iterations, batch_size, debug_frequency):
         sys.stdout.flush()
 
         if i % debug_frequency == 0 or i == num_iterations - 1:
-            # keep track of teh gan losses for later visualization
+            # keep track of teh A-GAN losses for later visualization
             d_losses.append(disc_loss)
             g_losses.append(gen_loss)
 
@@ -180,7 +180,7 @@ iterations, generated_accuracies, g_losses, d_losses = run_training(num_iteratio
 # visualize the accuracy of the generated models over time
 plot_accuracy_graph(iterations, generated_accuracies, avg_untrained_accuracy, 'athena-gen-acc')
 
-# visualize the losses of the gan model
+# visualize the losses of the A-GAN model
 plot_gan_losses(iterations, g_losses, d_losses, 'athena-losses')
 
 
