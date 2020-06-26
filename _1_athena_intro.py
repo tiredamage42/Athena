@@ -1,3 +1,13 @@
+import sys
+import tensorflow as tf2
+import tensorflow.compat.v1 as tf
+import numpy as np
+from plot_utils import plot_9_imgs, save_img, batches_2_grid
+from mnist_dataset import MNIST
+
+# dont want to spend a million years catching up on tensorflow's new api's...
+tf.disable_v2_behavior()
+
 '''
 NOTE FOR PEOPLE THAT ARE WELL VERSED IN MACHINE LEARNING:
     I'm aware that Convolutional models would be better suited for these demonstrations,
@@ -60,18 +70,10 @@ NOTE FOR PEOPLE THAT ARE WELL VERSED IN MACHINE LEARNING:
 
     this whole process is referred to as "supervised learning"
 
+    Below we'll train a simple feed forward neural net to label iamges of handwritten digits [0 - 9]
+    using Tensorflow:
+
 '''
-
-import sys
-import tensorflow as tf2
-import tensorflow.compat.v1 as tf
-import numpy as np
-from plot_utils import plot_9_imgs, save_img, batches_2_grid
-from mnist_dataset import MNIST
-
-# dont want to spend a million years catching up on tensorflow's new api's...
-tf.disable_v2_behavior()
-
 
 '''
 ========================================================================================
@@ -83,8 +85,9 @@ debug_img_reshape = [-1, dataset.img_res, dataset.img_res]
 
 # check if the data is correct:
 images, labels = dataset.get_random_training_batch(9)
-plot_9_imgs(images.reshape(debug_img_reshape), labels, "Label")
+plot_9_imgs(images.reshape(debug_img_reshape), labels, "Label", "CheckData")
 
+batch_dimension_size = None # this lets us have a variable batch size in all our models
 
 '''
 ========================================================================================
@@ -97,10 +100,9 @@ NOTE:
 usually when dealing with neural nets, we input BATCHES of data to make the training process go quicker,
 which introduces an extra leading dimension...
 '''
-def build_model (trainable):
-    
-    batch_dimension_size = None # this lets us have a variable batch size
 
+def build_feedforward_model ():
+    
     # the input layer
     input_layer = tf.placeholder(tf.float32, [batch_dimension_size, dataset.img_res_flat])
 
@@ -124,20 +126,15 @@ def build_model (trainable):
     # for training we need the target label (true label) for each input in the batch
     target_output = tf.placeholder(tf.int64, [batch_dimension_size])
 
-    '''
-    if trainable we add all the necessary ops like optimizing and calculating loss
-    else we just leave them out for the sake of performance
-    '''
-    if trainable:
-        # to compute the loss to minimize we first calculate the cross entropy
-        # between the target_outputs and the outputs the model predicted
-        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=outputs, labels=target_output)
+    # to compute the loss to minimize we first calculate the cross entropy
+    # between the target_outputs and the outputs the model predicted
+    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=outputs, labels=target_output)
 
-        # the overall loss is the average of the cross_entropy of all the samples we input into the model:
-        loss = tf.reduce_mean(cross_entropy)
+    # the overall loss is the average of the cross_entropy of all the samples we input into the model:
+    loss = tf.reduce_mean(cross_entropy)
 
-        # in order to perform the backpropagation and weight value modification, we use tensorflow's optimizers
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+    # in order to perform the backpropagation and weight value modification, we use tensorflow's optimizers
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
 
     # we need an accuracy metric, so we create a boolean value for whetehr each batch was
     # predicted correctly
@@ -148,9 +145,10 @@ def build_model (trainable):
     # for the predictions in that batch
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-    variable_initializer = tf.global_variables_initializer()
+    # variable_initializer = tf.global_variables_initializer()
+    variable_initializer = tf.initialize_variables([weights, biases])
 
-    return variable_initializer, input_layer, weights, biases, prediction, optimizer, target_output, accuracy
+    return variable_initializer, input_layer, prediction, optimizer, target_output, accuracy, weights, biases
 
 
 
@@ -160,13 +158,21 @@ TRAINING / TESTING:
 ========================================================================================
 '''
 # build the model graph
-variable_initializer, input_layer, _, _, prediction, optimizer, target_output, accuracy = build_model(trainable=True)
+variable_initializer, input_layer, prediction, optimizer, target_output, accuracy, _, _ = build_feedforward_model()
 
 # tensorflow specific functionality to actually run the model defined above:
 session = tf.Session()
 
 #initialize variables (the weights and biases)
 session.run(variable_initializer)
+
+
+# show 3 predictions from the test set (in a human readable fashion)
+def debug_prediction(name):
+    x_test, _ = dataset.get_random_testing_batch(9)
+    pred = session.run(prediction, feed_dict={ input_layer: x_test })
+    plot_9_imgs(x_test.reshape(debug_img_reshape), pred, "Prediction", name)
+
 
 # test the accuracy of the predictions on the test set (so we know that the model is actually
 # learning and generalizing, not jsut memorizing the training data)
@@ -202,16 +208,14 @@ def train_model(num_iterations, batch_size, accuracy_test_frequency):
         session.run(optimizer, feed_dict=feed_dict)
 
 
-# show 3 predictions from the test set (in a human readable fashion)
-def debug_prediction():
-    x_test, _ = dataset.get_random_testing_batch(9)
-    pred = session.run(prediction, feed_dict={ input_layer: x_test })
-    plot_9_imgs(x_test.reshape(debug_img_reshape), pred, "Prediction")
+# see how the model makes predictions before training
+debug_prediction("NNUntrained")
 
-
-# trian the model, then debug
+# trian the model
 train_model(num_iterations=1000, batch_size=32, accuracy_test_frequency=100)
-debug_prediction()
+
+# debug again, this time the predictions should be more accurate
+debug_prediction("NNTrained")
 
 # cleanup tensorflow resources
 session.close()
@@ -263,8 +267,9 @@ generated by the Generator.
 as the Discriminator gets better at telling the fake and real data apart, the Generator uses the 
 hidden layers of the Discriminaotr to get better at generating more realistic data.
 
+Below we'll create and train a GAN to generate novel images of handwritten digits,
+by having it train on the mnist dataset:
 '''
-
 
 # Sample noise from uniform distribution
 def sample_noise(batch_size, noise_size):
@@ -273,77 +278,85 @@ def sample_noise(batch_size, noise_size):
 '''
 ========================================================================================
 MODEL:
+
+anything concerning the discriminator will be prefixed with `d_`
+and anything concerning the generator will be prefixed with `g_` 
+for the sake of brevity
 ========================================================================================
 '''
 
-def hidden_layer (name, input_layer, output_size, activation=tf2.nn.leaky_relu):
-    with tf.variable_scope(name):
-        weights = tf.get_variable("weights", [input_layer.shape[-1], output_size])
-        biases = tf.get_variable("biases", [output_size])
-        outputs = tf.matmul(input_layer, weights) + biases
-        # hidden layers require a function at the end to normalize the data
-        activated = activation(outputs)
-        return activated, outputs
-    
-
-def generator(input_layer):
-    with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
-        h1, _ = hidden_layer('layer1', input_layer, 128)
-        image, _ = hidden_layer('image', h1, dataset.img_res_flat, tf2.nn.sigmoid)
-    return image
-
-
-def discriminator(input_layer):
-    with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
-        h1, _ = hidden_layer('layer1', input_layer, 128)
-        # prediction output size is 1 values (either 0 or 1)
-        pred, logits = hidden_layer('prediction', h1, 1, tf2.nn.sigmoid)
-    return pred, logits
-
 input_noise_dimension = 100
 
-# nosie sample to feed into the generator
-input_noise = tf.placeholder(tf.float32, [None, input_noise_dimension])
+def build_gan_model (data_size_flat, generator_activation_fn=tf2.nn.sigmoid):
 
-# the generated image from our NN
-generated_image = generator(input_noise)
+    def hidden_layer (name, input_layer, output_size, activation=tf2.nn.leaky_relu):
+        with tf.variable_scope(name):
+            weights = tf.get_variable("weights", [input_layer.shape[-1], output_size])
+            biases = tf.get_variable("biases", [output_size])
+            outputs = tf.matmul(input_layer, weights) + biases
+            # hidden layers require a function at the end to normalize the data
+            outputs = activation(outputs)
+            return outputs
+        
 
-# a real mnist image form the dataset
-real_image = tf.placeholder(tf.float32, [None, dataset.img_res_flat])
-
-# prediction as to whether th real image is real or fake
-real_prediction, logits_real = discriminator(real_image)
-
-# prediction as to whether the generated image is real or fake
-generated_prediction, logits_fake = discriminator(generated_image)
-
-# calculate loss
-# discriminator loss for real input is how far discriminator is from labeling it it as "real"
-D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real, labels=tf.ones_like(logits_real)))
-# discriminator loss for generated input is how far discriminator is from labeling it it as "fake"
-D_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.zeros_like(logits_fake)))
-# combine the discriminator loss
-d_loss = D_loss_real + D_loss_fake
-
-# generator loss is how far discriminator is from labeling generated image it as "real"
-g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.ones_like(logits_fake)))
+    def generator(input_layer):
+        with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
+            h1 = hidden_layer('layer1', input_layer, 128)
+            image = hidden_layer('image', h1, data_size_flat, generator_activation_fn)
+        return image
 
 
+    def discriminator(input_layer):
+        with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
+            h1 = hidden_layer('layer1', input_layer, 128)
+            # prediction output size is 1 values (either 0 or 1)
+            logits = hidden_layer('prediction', h1, 1, tf.nn.identity)
+        return logits
 
+    
+    # nosie sample to feed into the generator
+    input_noise = tf.placeholder(tf.float32, [batch_dimension_size, input_noise_dimension])
 
+    # the generated image from our NN
+    generated_image = generator(input_noise)
 
-# we need to seperate the weights of the discriminator and generator
-# in order to train them differently
-train_vars = tf.trainable_variables()
+    # a real datapoint form the dataset
+    real_data = tf.placeholder(tf.float32, [batch_dimension_size, data_size_flat])
 
-discriminator_weights = [var for var in train_vars if var.name.startswith("disc")]
-generator_weights = [var for var in train_vars if var.name.startswith("gen")]
+    # prediction as to whether th real image is real or fake
+    logits_real = discriminator(real_data)
 
-# optimizers
-discriminator_optimizer = tf.train.AdamOptimizer().minimize(d_loss, var_list=discriminator_weights)
-generator_optimizer = tf.train.AdamOptimizer().minimize(g_loss, var_list=generator_weights)
+    # prediction as to whether the generated image is real or fake
+    logits_fake = discriminator(generated_image)
 
-variable_initializer = tf.global_variables_initializer()
+    # calculate loss
+    # discriminator loss for real input is how far discriminator is from labeling it it as "real"
+    D_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_real, labels=tf.ones_like(logits_real)))
+    # discriminator loss for generated input is how far discriminator is from labeling it it as "fake"
+    D_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.zeros_like(logits_fake)))
+    # combine the discriminator loss
+    d_loss = D_loss_real + D_loss_fake
+
+    # generator loss is how far discriminator is from labeling generated image it as "real"
+    g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits_fake, labels=tf.ones_like(logits_fake)))
+
+    # we need to seperate the weights of the discriminator and generator
+    # in order to train them differently
+    train_vars = tf.trainable_variables()
+
+    d_weights = [var for var in train_vars if var.name.startswith("disc")]
+    g_weights = [var for var in train_vars if var.name.startswith("gen")]
+
+    # optimizers
+    d_optimizer = tf.train.AdamOptimizer().minimize(d_loss, var_list=d_weights)
+    g_optimizer = tf.train.AdamOptimizer().minimize(g_loss, var_list=g_weights)
+
+    variable_initializer = tf.initialize_variables(g_weights + d_weights)
+
+    return variable_initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data
+
+variable_initializer, d_optimizer, g_optimizer, d_loss, g_loss, generated_image, input_noise, real_data = build_gan_model(dataset.img_res_flat)
+
 
 '''
 ========================================================================================
@@ -362,7 +375,7 @@ def train_gan(num_iterations, batch_size, debug_frequency):
     debug_noise = sample_noise(debug_batch_size, input_noise_dimension)
 
     for i in range(num_iterations):
-
+        # make sure we have a lot of images from the beginning when changes happen quickly
         if i % debug_frequency == 0 or i == num_iterations - 1 or (i < 10000 and i % 1000 == 0):
             debug_imgs = session.run(generated_image, feed_dict={ input_noise: debug_noise })
             debug_imgs = debug_imgs.reshape(debug_img_reshape)
@@ -373,9 +386,9 @@ def train_gan(num_iterations, batch_size, debug_frequency):
         input_batch, _ = dataset.get_random_training_batch(batch_size)
 
         # train the discriminator
-        _, disc_loss = session.run([discriminator_optimizer, d_loss], feed_dict={ real_image: input_batch, input_noise: sample_noise(batch_size, input_noise_dimension) } )
+        _, disc_loss = session.run([d_optimizer, d_loss], feed_dict={ real_data: input_batch, input_noise: sample_noise(batch_size, input_noise_dimension) } )
         # train the generator
-        _, gen_loss = session.run([generator_optimizer, g_loss], feed_dict={ input_noise: sample_noise(batch_size, input_noise_dimension) })
+        _, gen_loss = session.run([g_optimizer, g_loss], feed_dict={ input_noise: sample_noise(batch_size, input_noise_dimension) })
 
         sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
         sys.stdout.flush()
@@ -441,7 +454,13 @@ all these models will ahve one hidden layer each of the same dimensions, but sin
 initialized with random values, the trained versions should all have different weight values
 from eachother when fully trained as well
 
-once each model is trained to test at 80% accuracy (at least), we'll save the weights to a numpy file
+we accomplish this by having a special feedforward model built onto the graph ( DataNN ).
+
+we'll train DataNN until it reaches at least 90% accuracy on the MNIST dataset, store the trained 
+weights and biases, and reinitialize its weights and biases to start the process over again.
+
+once we have a good batch of weights to learn from, we'll pass it to Athena to train on, and go back
+to generating another batch of DataNN weights and biases
 
 
 Training:
@@ -450,13 +469,64 @@ that would be an ideal candidate for hidden layer weights that can label the MNI
 
 Athena's Generator will hopefully also learn how to generate values that can do so as well!
 
+Testing and debugging throughout training:
+On the default graph, we'll have a special testing version of a FeedForward NN that can have its
+hidden layer weights assigned to ( TestNN ).
 
-Testing:
-We'll have Athena generate 10 different weights matrices, and save them in numpy files.
-then we'll load each of those numpy files and use them as the hidden layer weights in a new NN,
-which we will test agaisnt the MNIST dataset.
+We'll have Athena generate 10 different weights matrices, assign each of them to the TestNN weights,
+and test TestNN agaisnt the MNIST dataset. we'll tehn print and track the average accuracy of all 10
+tests
 
 '''
+
+
+
+'''
+========================================================================================
+MODEL:
+========================================================================================
+'''
+
+
+'''
+build the feed forward neural network that will test out the Athena generated weight matrices:
+similar to the simple feed forward model above, except we strip out the training specific operations
+and make the weights and biases assignable
+'''
+def build_testNN ():
+    with tf.variable_scope('TestNN'):
+
+        # the input layer
+        input_layer = tf.placeholder(tf.float32, [batch_dimension_size, dataset.img_res_flat])
+
+        # the weights and biases of the hidden layer
+        weights = tf.Variable(tf.zeros([dataset.img_res_flat, dataset.num_classes]), name="weights", trainable=False)
+        biases = tf.Variable(tf.zeros([dataset.num_classes]), name="biases", trainable=False)
+        
+        outputs = tf.matmul(input_layer, weights) + biases
+        prediction = tf.argmax(tf.nn.softmax(outputs), axis=1)
+        target_output = tf.placeholder(tf.int64, [batch_dimension_size])
+        accuracy = tf.reduce_mean(tf.cast(tf.equal(target_output, prediction), tf.float32))
+
+    # receive a numpy array of shape [img_res_flat + 1, num_classes]
+    # and split them up to assign it to the weights and biases
+    def weights_loader(generated_weights, session):
+        weights.load(generated_weights[:dataset.img_res_flat], session)
+        biases.load(generated_weights[-1], session)
+
+
+    return input_layer, prediction, target_output, accuracy, weights_loader
+
+
+'''
+========================================================================================
+TRAINING / TESTING:
+========================================================================================
+'''
+
+
+
+
 
 
 '''
