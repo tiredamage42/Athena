@@ -2,7 +2,7 @@ import sys
 import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 import numpy as np
-from plot_utils import plot_9_imgs, batches_2_grid, plot_accuracy_graph, create_gif_from_images
+from image_utils import plot_9_imgs, batches_2_grid, plot_accuracy_graph, create_gif_from_images, plot_gan_losses
 from mnist_dataset import MNIST
 from weights_dataset import WeightsData
 
@@ -75,112 +75,19 @@ NOTE FOR PEOPLE THAT ARE WELL VERSED IN MACHINE LEARNING:
 
     this whole process is referred to as "supervised learning"
 
-    Below we'll train a simple feed forward neural net to label iamges of handwritten digits [0 - 9]
+    Below we'll run through an explanation of the code in feed_forward_nn.py and 
+    
+    train a simple feed forward neural net to label iamges of handwritten digits [0 - 9]
     using Tensorflow:
 
+    to run it yourself:
+    python feed_forward_nn.py
 '''
 
-'''
-========================================================================================
-DATA:
-========================================================================================
-'''
-dataset = MNIST()
-debug_img_reshape = [-1, dataset.img_res, dataset.img_res]
-
-# check if the data is correct:
-images, labels = dataset.get_random_training_batch(9)
-plot_9_imgs(images.reshape(debug_img_reshape), labels, "Label", "assert-data")
-
-batch_dimension_size = None # this lets us have a variable batch size in all our models
 
 '''
-========================================================================================
-MODEL:
-========================================================================================
+EXPLAIN DEMO IN feed_forward_nn.py
 '''
-
-# build the model graph
-variable_initializer, input_layer, prediction, optimizer, target_output, accuracy, _, _ = build_feedforward_model("nn-demo", dataset.num_classes, dataset.img_res_flat)
-
-'''
-========================================================================================
-TRAINING / TESTING:
-========================================================================================
-'''
-
-# tensorflow specific functionality to actually run the model defined above:
-session = tf.Session()
-
-#initialize variables (the weights and biases)
-session.run(variable_initializer)
-
-
-# show 3 predictions from the test set (in a human readable fashion)
-def debug_prediction(name):
-    x_test, _ = dataset.get_random_testing_batch(9)
-    pred = session.run(prediction, feed_dict={ input_layer: x_test })
-    plot_9_imgs(x_test.reshape(debug_img_reshape), pred, "Prediction", name)
-
-
-# test the accuracy of the predictions on the test set (so we know that the model is actually
-# learning and generalizing, not jsut memorizing the training data)
-def test_accuracy():
-    acc = session.run(accuracy, feed_dict={
-        input_layer: dataset.x_test,
-        target_output: dataset.y_test
-    })
-    return acc
-
-def train_model(num_iterations, batch_size, accuracy_test_frequency):
-    acc = 0
-    accuracies = []
-    iterations = []
-    for i in range(num_iterations):
-
-        if i % accuracy_test_frequency == 0:
-            acc = test_accuracy()
-            iterations.append(i)
-            accuracies.append(acc)
-            
-        sys.stdout.write("\rTraining Iteration {0}/{1} :: Test Accuracy: {2:.1%} ==========".format(i, num_iterations, acc))
-        sys.stdout.flush()
-
-        # get a batch of training samples and set them as the
-        # input, and target
-        input_batch, labels_batch = dataset.get_random_training_batch(batch_size)
-
-        # build a dictionary object with corresponding placeholders and inptus
-        # for those placeholders:
-        feed_dict = {
-            input_layer: input_batch,
-            target_output: labels_batch
-        }
-
-        # run the optimization iteration for this batch
-        session.run(optimizer, feed_dict=feed_dict)
-
-    return iterations, accuracies
-
-
-# see how the model makes predictions before training
-debug_prediction("feedforward-nn-untrained-preds")
-
-# trian the model
-iterations, accuracies = train_model(num_iterations=1000, batch_size=32, accuracy_test_frequency=100)
-
-plot_accuracy_graph(iterations, accuracies, None, 'feedforward-nn-acc')
-
-
-# debug again, this time the predictions should be more accurate
-debug_prediction("feedforward-nn-trained-preds")
-
-# cleanup tensorflow resources
-session.close()
-
-# clear the graph for the next demo
-tf.reset_default_graph()
-
 
 
 '''
@@ -228,6 +135,19 @@ hidden layers of the Discriminaotr to get better at generating more realistic da
 Below we'll create and train a GAN to generate novel images of handwritten digits,
 by having it train on the mnist dataset:
 '''
+
+
+'''
+========================================================================================
+DATA:
+========================================================================================
+'''
+dataset = MNIST()
+debug_img_reshape = [-1, dataset.img_res, dataset.img_res]
+
+batch_dimension_size = None # this lets us have a variable batch size in all our models
+
+
 
 '''
 ========================================================================================
