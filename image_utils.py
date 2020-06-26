@@ -65,8 +65,6 @@ def plot_accuracy_graph(iterations, accuracies, baseline, directory="images/"):
     plt.savefig(directory + 'AthenaProgress.png')
     plt.clf()
 
-
-
 def create_gif_from_images(images, duration, directory, name):
     if not os.path.exists(directory):
         os.makedirs(directory)
