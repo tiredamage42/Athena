@@ -88,4 +88,4 @@ def create_gif_from_images(images, duration, name):
     assert_images_dir()
     
     images = [Image.fromarray((image * 255).astype(np.uint8)).convert("P") for image in images]
-    images[0].save(imgs_dir + name + '.gif', save_all=True, append_images=images[1:], optimize=False, duration=((duration * 1000) / len(images)), loop=0)
+    images[0].save(imgs_dir + name + '.gif', save_all=True, append_images=images[1:], optimize=False, duration=max((duration * 1000) / len(images), 100), loop=0)

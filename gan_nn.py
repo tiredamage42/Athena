@@ -163,7 +163,8 @@ if __name__ == "__main__":
         d_losses = []
 
         for i in range(num_iterations):
-            if i % debug_frequency == 0 or i == num_iterations - 1:
+            # we want more images from the beginning when changes are greater
+            if i % debug_frequency == 0 or i == num_iterations - 1 or (i < 1000 and i % 100 == 0):
                 # generate some images so we can see them
                 debug_imgs = session.run(generated_image, feed_dict={ input_noise: debug_noise })
                 # reshape them so they're not 'flat' anymore
@@ -179,7 +180,7 @@ if __name__ == "__main__":
             _, disc_loss = session.run([d_optimizer, d_loss], feed_dict={ 
                 real_data: input_batch, 
                 input_noise: sample_noise(batch_size, input_noise_size) 
-            } )
+            })
             # train the generator
             _, gen_loss = session.run([g_optimizer, g_loss], feed_dict={ 
                 input_noise: sample_noise(batch_size, input_noise_size) 
@@ -195,7 +196,7 @@ if __name__ == "__main__":
 
         return iterations, g_losses, d_losses, debug_images
 
-    iterations, g_losses, d_losses, debug_images = train_gan(100000, 32, 100)
+    iterations, g_losses, d_losses, debug_images = train_gan(100000, 32, 1000)
 
     # create a gif of the images over time
     create_gif_from_images(debug_images, 10, "gan-demo")
