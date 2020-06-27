@@ -4,7 +4,6 @@ from PIL import Image
 import numpy as np
 import glob
 
-
 imgs_dir = 'images/'
 def assert_images_dir():
     if not os.path.exists(imgs_dir):
@@ -27,12 +26,6 @@ def plot_9_imgs(images, labels, labels_prefix, name):
     
     plt.savefig(imgs_dir + name + '.png')
     plt.clf()
-
-# save a numpy array as an image file on disk
-# def save_img(image, name):
-#     assert_images_dir()
-#     im = Image.fromarray((image * 255).astype(np.uint8)).convert("L")
-#     im.save(imgs_dir + name + '.jpg')
 
 # helper function to take images in shape [batches, res, res]
 # to shape [res * squareroot(batches), res *  squareroot(batches)] grid

@@ -1,8 +1,6 @@
 '''
 script to combine all the weight dataset loose files into a root copy that contains the whole dataset
 if the combined root file exists, the loose files are appended
-
-this will delete all the loose files
 '''
 import os
 import glob

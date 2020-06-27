@@ -1,6 +1,11 @@
 '''
 this file shows how to implement a General Adversarial Network, or GAN
 '''
+
+import os
+# suppress info logs
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
+
 import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 import numpy as np
@@ -46,7 +51,7 @@ def build_gan_model (gan_name, data_size, noise_size, generator_activation_fn=tf
             return outputs
         
     def generator(input_layer):
-        with tf.variable_scope('generator', reuse=tf.AUTO_REUSE):
+        with tf.variable_scope('generator'):
             h1 = hidden_layer('layer1', input_layer, 128)
             generated = hidden_layer('generated', h1, data_size, generator_activation_fn)
         return generated

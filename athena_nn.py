@@ -19,7 +19,6 @@ from gan_nn import build_gan_model, sample_noise
 # dont want to spend a million years catching up on tensorflow's new api's...
 tf.disable_v2_behavior()
 
-
 '''
 ========================================================================================
 DATA:
@@ -35,7 +34,6 @@ weights_data = weights_dataset.WeightsData()
 BASELINE:
 ========================================================================================
 '''
-
 # first lets get a baseline for waht the average accuracy for a completely untrained NN
 # on the dataset:
 def get_average_untrained_accuracy(samples=100):
@@ -100,15 +98,15 @@ def build_testNN ():
     def weights_loader(generated_weights, session):
         weights.load(generated_weights[:-1], session)
         biases.load(generated_weights[-1], session)
-
+        
     return input_layer, prediction, target_output, accuracy, weights_loader
 
+# build testNN
+tnn_input, tnn_prediction, tnn_target, tnn_accuracy, tnn_load_weights = build_testNN()
 
 # build the A-GAN model
 a_initializer, a_d_optimizer, a_g_optimizer, a_d_loss, a_g_loss, a_generated_weights, a_input_noise, a_real_data = build_gan_model("athena", weights_dataset.flat_size, input_noise_dimension, tf.nn.tanh)
 
-# build testNN
-tnn_input, tnn_prediction, tnn_target, tnn_accuracy, tnn_load_weights = build_testNN()
 
 '''
 ========================================================================================
@@ -158,7 +156,6 @@ def run_training(num_iterations, batch_size, debug_frequency):
             # keep track of the accuracy for later visualizations
             gen_accuracy_tracked.append(gen_accuracy)
             iterations.append(i)
-            
             
         # get a batch of training samples
         input_batch = weights_data.get_random_batch(batch_size)

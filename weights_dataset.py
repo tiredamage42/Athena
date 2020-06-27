@@ -31,9 +31,11 @@ if __name__ == "__main__":
 
     import sys
     import os
+    # suppress info logs
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
+
     import tensorflow as tf2
     import tensorflow.compat.v1 as tf
-    import mnist_dataset
     from feed_forward_nn import build_feedforward_model
     tf.disable_v2_behavior()
 

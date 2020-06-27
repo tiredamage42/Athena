@@ -2,6 +2,9 @@
 this file shows the code for constructing a simple feed forward neural net, with one layer.
 these models are sometimes referred to as a "Linear Regression Model"
 '''
+import os
+# suppress info logs
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
 
 import tensorflow as tf2
 import tensorflow.compat.v1 as tf
