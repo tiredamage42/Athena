@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
         return iterations, g_losses, d_losses, debug_images
 
-    iterations, g_losses, d_losses, debug_images = train_gan(10000, 32, 100)
+    iterations, g_losses, d_losses, debug_images = train_gan(100000, 32, 100)
 
     # create a gif of the images over time
     create_gif_from_images(debug_images, 10, "gan-demo")
