@@ -177,7 +177,7 @@ if __name__ == "__main__":
     iterations, accuracies = train_model(num_iterations=1000, batch_size=32, accuracy_test_frequency=100)
 
     # visualize a graph of teh model's accuracy over time
-    plot_accuracy_graph(iterations, accuracies, None, 'feedforward-nn-acc')
+    plot_accuracy_graph(iterations, accuracies, None, "FF-NN", 'feedforward-nn-acc')
 
     # debug again, this time the predictions should be more accurate
     visualize_random_predictions("feedforward-nn-trained-preds")

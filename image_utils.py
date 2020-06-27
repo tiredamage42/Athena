@@ -47,10 +47,10 @@ def batches_2_grid (batches, grid_res):
         result[x_start:x_end, y_start:y_end] = batches[i]
     return result
 
-def plot_accuracy_graph(iterations, accuracies, baseline, name):
+def plot_accuracy_graph(iterations, accuracies, baseline, label, name):
     assert_images_dir()
     
-    plt.plot(iterations, accuracies, label='Generated Weights')
+    plt.plot(iterations, accuracies, label=label)
 
     if baseline is not None:
         plt.plot([iterations[0], iterations[-1]], [baseline, baseline], label='Untrained')

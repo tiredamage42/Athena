@@ -178,7 +178,7 @@ def run_training(num_iterations, batch_size, debug_frequency):
 iterations, generated_accuracies, g_losses, d_losses = run_training(num_iterations=1000, batch_size=8, debug_frequency=100)
 
 # visualize the accuracy of the generated models over time
-plot_accuracy_graph(iterations, generated_accuracies, avg_untrained_accuracy, 'athena-gen-acc')
+plot_accuracy_graph(iterations, generated_accuracies, avg_untrained_accuracy, "Generated Weights", 'athena-gen-acc')
 
 # visualize the losses of the A-GAN model
 plot_gan_losses(iterations, g_losses, d_losses, 'athena-losses')
