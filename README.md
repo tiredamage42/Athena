@@ -33,12 +33,15 @@ Before we go into how that iterative process works, we need to examine what exac
     - input layer
     - output layer
     - at least 1 hidden layer
-
+    <div align="center">
     <img src="https://sds-platform-private.s3-us-east-2.amazonaws.com/uploads/76_blog_image_1.png" alt="" width="512" height="256">
+    <br><b>
+    Input Layer [ Yellow ] =>
+    Hidden Layers [ Green ] =>
+    Output Layer [ Red ]
+    </b>
+    </div>
 
-    > Input Layer **[ Yellow ]**<br>
-    > Hidden Layers **[ Green ]**<br>
-    > Output Layer **[ Red ]**
 
     A numerical representation of the the input data (in this case pixel values) gets fed into the input layer, then is modified by the hidden layers in order to return the result in the output layer.
 
@@ -82,28 +85,30 @@ In the `feed_forward_nn.py` file is a demo with well documented code that shows 
 
 The script starts off by loading the MNIST dataset and asserting that the images and labels are aligned correctly in their arrays:
 
+<div align="center">
 <img src="docs/feedforward-nn-assert-data.png" alt="" width="512" height="">
-
-> Making sure the correct labels correspond to the correct images
+<br><b>Making sure the correct labels correspond to the correct images</b></div>
 
 After asserting that the dataset is correctly initialized, we build the model and run a prediction on 9 random datapoints of the test set:
 
+<div align="center">
 <img src="docs/feedforward-nn-untrained-preds.png" alt="" width="512" height="">
-
-> Model predictions before training
+<br><b>Model predictions before training</b></div>
 
 As the model is not trained yet, all the predictions are wrong (if there are any correct ones, we can consider them "lucky guesses"). We can use this visualization to compare the predictions after training.
 
 The training will run for only 1000 iterations, but as you can see from the logs and generated accuracy graph, it reaches at least 90% accuracy on the test set pretty quickly!
 
-<img src="docs/feedforward-nn-acc.png" alt="" width="512" height="">
 
-> Accuracy over time while training
+<div align="center">
+<img src="docs/feedforward-nn-acc.png" alt="" width="512" height="">
+<br><b>Accuracy over time while training</b></div>
 
 A prediction is run and visualized on 9 random datapoints form the test set again.  This time the model has correctly labelled most (if not all) of the digits.
 
-<img src="docs/feedforward-nn-trained-preds.png" alt="" width="512" height="">
-
-> Prediction on 9 random digits from the test set.
+<div align="center">
+<img src="docs/feedforward-nn-trained-preds.png" alt="" width="512" height=""><br><b>
+Prediction on 9 random digits from the test set.</b>
+</div>
 
 It's interesting to see the mistakes and intricacies of the models 'thought' proccess.  For instance, in the middle image, it learned to ignore random noise around teh image ( the two dots on the right side ) and correctly predicted it as a `1`.  Whereas in the bottom-middle image of a `7` was incorrectly labelled as a `9`, but maybe the model was taking into account the features of a `9` that are curved horizontal lines sticking out of a vertical line, (that `7` could be considered an incomplete `9`).
