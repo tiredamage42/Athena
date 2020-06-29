@@ -16,7 +16,7 @@ Required Libraries:
 >    `images/`
 > - Any datasets generated or downloaded by running scripts in this repo will show up in directory:  
 >   `datasets/`
-> - Convolutional models would be better suited for these demonstrations, but for the sake of simplicity I'll be using simple linear regression modles.
+> - Convolutional models would be better suited for these demonstrations, but for the sake of simplicity I'll be using linear regression modles.
 ><hr>
 
 # Neural Nets
