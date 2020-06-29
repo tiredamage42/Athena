@@ -1,5 +1,4 @@
 # Athena
-
 An experiment in neural network creation, created as my Stackathon project for Fullstack Academy.
 
 Written in python.
@@ -31,10 +30,10 @@ Before we go into how that iterative process works, we need to examine what exac
     - input layer
     - output layer
     - at least 1 hidden layer
-    <br><br><br><div align="center" class="border"><img src="https://sds-platform-private.s3-us-east-2.amazonaws.com/uploads/76_blog_image_1.png" width="512" height="256">
-    <br><b>Input Layer [ Yellow ] => Hidden Layers [ Green ] => Output Layer [ Red ]</b>
+    <br><br><br><div align="center"><img src="https://sds-platform-private.s3-us-east-2.amazonaws.com/uploads/76_blog_image_1.png" width="512" height="256">
+    <br><sup><b>Input Layer [ Yellow ] => Hidden Layers [ Green ] => Output Layer [ Red ]</b>
     <br>A numerical representation of the the input data (in this case pixel values) gets fed into the input layer, then is modified by the hidden layers in order to return the result in the output layer.
-    </div>
+    </sup></div>
 
 - **Hidden Layer:**<br>
     The hidden layers are each made up of 2 dimensional arrays (matrices) of float values, often called the ***"weights"***. The matrix multiplication of these weights with the data representation from the previous layer is meant to approximate the function the neural net is trying to "learn".
@@ -77,23 +76,23 @@ In the `feed_forward_nn.py` file is a demo with well documented code that shows 
 
 The script starts off by loading the MNIST dataset and asserting that the images and labels are aligned correctly in their arrays:
 
-<div align="center" class="border"><img src="docs/feedforward-nn-assert-data.png" width="512" height="">
-<br><b>Making sure the correct labels correspond to the correct images</b></div><br>
+<div align="center"><img src="docs/feedforward-nn-assert-data.png" width="512" height="">
+<br><b><sup>Making sure the correct labels correspond to the correct images</sup></b></div><br>
 After asserting that the dataset is correctly initialized, we build the model and run a prediction on 9 random datapoints of the test set:
 
-<div align="center" class="border"><img src="docs/feedforward-nn-untrained-preds.png" width="512" height="">
-<br><b>Model predictions before training</b></div><br>
+<div align="center"><img src="docs/feedforward-nn-untrained-preds.png" width="512" height="">
+<br><b><sup>Model predictions before training</sup></b></div><br>
 As the model is not trained yet, all the predictions are wrong (if there are any correct ones, we can consider them "lucky guesses"). We can use this visualization to compare the predictions after training.
 
 The training will run for only 1000 iterations, but as you can see from the logs and generated accuracy graph, it reaches at least 90% accuracy on the test set pretty quickly!
 
 
-<div align="center" class="border"><img src="docs/feedforward-nn-acc.png" width="512" height="">
-<br><b>Accuracy over time while training</b></div><br>
+<div align="center"><img src="docs/feedforward-nn-acc.png" width="512" height="">
+<br><b><sup>Accuracy over time while training</sup></b></div><br>
 A prediction is run and visualized on 9 random datapoints form the test set again.  This time the model has correctly labelled most (if not all) of the digits.
 
-<div align="center" class="border"><img src="docs/feedforward-nn-trained-preds.png" width="512" height="">
-<br><b>Prediction on 9 random digits from the test set.</b></div><br>
+<div align="center"><img src="docs/feedforward-nn-trained-preds.png" width="512" height="">
+<br><b><sup>Prediction on 9 random digits from the test set.</sup></b></div><br>
 It's interesting to see the mistakes and intricacies of the models 'thought' proccess.  For instance, in the middle image, it learned to ignore random noise around teh image ( the two dots on the right side ) and correctly predicted it as a `1`.  Whereas in the bottom-middle image of a `7` was incorrectly labelled as a `9`, but maybe the model was taking into account the features of a `9` that are curved horizontal lines sticking out of a vertical line, (that `7` could be considered an incomplete `9`).
 
 # General Adversarial Networks
@@ -101,8 +100,8 @@ A more advanced type of neural network used for different purposes is called a G
 
 GANs are generally used to create data from 'scratch'. You've probably seen this type of model in action generating images of faces.
 
-<div align="center" class="border"><img src="https://miro.medium.com/max/1400/1*toM1jhejQKkM73gSyYvZwQ.png" width="512" height="">
-<br><b>These people don't actually exist.</b></div><br>
+<div align="center"><img src="https://miro.medium.com/max/1400/1*toM1jhejQKkM73gSyYvZwQ.png" width="512" height="">
+<br><b><sup>These people don't actually exist.</sup></b></div><br>
 
 The implementation of these models closely follows the basic Neural Net defined above ( an iterative
 process of gradually changing the hidden layer weights in order to achieve the optimal result ). The major difference is in the architecture and what the input-output pairs are when training.
@@ -114,8 +113,8 @@ GANs are made up of 2 different neural nets connected together, a ***"Generator"
     - `0` if it determines that the input was fake (generated by the Generator) or
     - `1` if it determines that the input was a real data point (i.e. a real picture of someones face)
 
-<div align="center" class="border"><img src="https://robotronblog.files.wordpress.com/2017/09/g1.jpg" width="512" height="">
-<br><b>Diagram of the architecture of a General Adversarial Network.</b></div><br>
+<div align="center"><img src="https://robotronblog.files.wordpress.com/2017/09/g1.jpg" width="512" height="">
+<br><b><sup>Diagram of the architecture of a General Adversarial Network.</sup></b></div><br>
 
 ## Training
 Through the training process, the Discriminator is trained to tell the difference between the generated data points and the real data points (using the same process of backpropagation detailed above).
@@ -138,13 +137,13 @@ In the `gan_nn.py` file is a demo with well documented code that shows how to im
 The file will train the model for 100,000 iterations, and generated images will be saved throughout the training process so we can track the Generator's progress.
 
 
-<div align="center" class="border"><img src="docs/gan-demo.gif" width="512" height="">
-<br><b>Evolution of the generated handwritten digits</b></div><br>
+<div align="center"><img src="docs/gan-demo.gif" width="512" height="">
+<br><b><sup>Evolution of the generated handwritten digits</sup></b></div><br>
 
 We also track the loss of the Generator and Discriminator as well:
 
-<div align="center" class="border"><img src="docs/gan-demo-losses.png" width="512" height="">
-<br><b>Losses throughout training</b></div><br>
+<div align="center"><img src="docs/gan-demo-losses.png" width="512" height="">
+<br><b><sup>Losses throughout training</sup></b></div><br>
 
 We can see with the loss decrease for both parts, that the Discriminator and Generator get better at their tasks. But we can see through the chaotic fluctuation throughout the iterations that they are in direct competition with eachotehr.  When the Generator gets better, the Discriminator has a tougher time telling real and fake data apart, and when the Discriminator gets better, the Generator has trouble generating an image that the Discriminator thinks is real.
 
@@ -152,7 +151,7 @@ We can see with the loss decrease for both parts, that the Discriminator and Gen
 # The Athena Model
 Like Prometheus creating humans from clay in Greek mythology, when we create these models, we are essentailly creating the blueprints ( or husks ) of the algorithms, and letting them grow and change on their own through the training process. In that creation story though, life was breathed into humankind by the goddess Athena. 
 
-<div align="center" class="border"><img src="https://66.media.tumblr.com/7cf00b6f47b450a32d7aab23cde35273/tumblr_inline_p64riodEeO1v38u0v_1280.jpg" width="512" height="">
+<div align="center"><img src="https://66.media.tumblr.com/7cf00b6f47b450a32d7aab23cde35273/tumblr_inline_p64riodEeO1v38u0v_1280.jpg" width="512" height="">
 <br><b></b></div><br>
 
 Could we draw inspiration from this part of the myth and apply it to our models?
@@ -173,7 +172,7 @@ I've never tried this before, and am by no means a mathematician or data scienti
 <hr>
 
 ## Goal:
-The goal will be for A-GAN to create the weights of a model that can label the standard benchmark for image recognition: the MNIST dataset ( a series of images of handwritten numbers from 0 - 9 ).  
+The goal will be for A-GAN to create the weights of a model that can label the standard benchmark for image recognition: the MNIST dataset ( a series of images of handwritten numbers from 0 - 9 ).
 
 First we'll see what the average accuracy is for several (let's say 100) untrained models (completely random weight values) on the data set. <br>This winds up being around 10%.
 
@@ -227,16 +226,16 @@ The file will train the model for 1,000 iterations, track the accuracy of the ge
 
 During training we can see that the model quickly learns to generate weight matrices comparable to those trained through the normal process of backpropagation.  In fact, it generates models capable of 90% accuracy after only 500 iterations!
 
-<div align="center" class="border"><img src="docs/athena-gen-acc.png" alt="" width="512" height="">
-<br><b>Accuracy of generated models</b></div><br>
+<div align="center"><img src="docs/athena-gen-acc.png" alt="" width="512" height="">
+<br><b><sup>Accuracy of generated models</sup></b></div><br>
 
-<div align="center" class="border"><img src="docs/athena-losses.png" alt="" width="512" height="">
-<br><b>A-GAN losses throughout training</b></div><br>
+<div align="center"><img src="docs/athena-losses.png" alt="" width="512" height="">
+<br><b><sup>A-GAN losses throughout training</sup></b></div><br>
 
 After training we generate a model using the A-GAN and visualize its predictions on a random set of 9 images from the MNIST test dataset:
 
-<div align="center" class="border"><img src="docs/athena-gen-preds.png" alt="" width="512" height="">
-<br><b>A-GAN generated model predictions</b></div><br>
+<div align="center"><img src="docs/athena-gen-preds.png" alt="" width="512" height="">
+<br><b><sup>A-GAN generated model predictions</sup></b></div><br>
 
 # Conclusion and Concerns
 The experiment seems at first to be successful, as the goal of generating models that have comparable accuracy to normally trained models has been met.
@@ -247,7 +246,7 @@ It is highly suspicious that it learns to generate these models so quickly thoug
 - **The trained weight matrix dataset values aren't all that different from one another:**
     <br> Perhaps an actual mathematician could help me out with this problem, but I could not think of a way to test or measure how "similar" two weight matrices are.<br>One reason I believe this might be the case is that we pose the problem of labelling the MNIST dataset as a Linear Regression problem.  
     
-    <div align="center" class="border"><img src="https://i0.wp.com/www.theanalysisfactor.com/wp-content/uploads/2019/06/linear-regression-gpa.png?fit=470%2C376&ssl=1" width="512" height=""><br><b></b></div><br>
+    <div align="center"><img src="https://i0.wp.com/www.theanalysisfactor.com/wp-content/uploads/2019/06/linear-regression-gpa.png?fit=470%2C376&ssl=1" width="512" height=""><br><b></b></div><br>
     
     This is akin to just finding the line of best fit for a set of data points, and there is only ever ONE line that does that.
 
