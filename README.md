@@ -93,6 +93,7 @@ A prediction is run and visualized on 9 random datapoints form the test set agai
 
 <div align="center"><img src="docs/feedforward-nn-trained-preds.png" width="512" height="">
 <br><b><sup>Prediction on 9 random digits from the test set.</sup></b></div><br>
+
 It's interesting to see the mistakes and intricacies of the models 'thought' proccess.  For instance, in the middle image, it learned to ignore random noise around teh image ( the two dots on the right side ) and correctly predicted it as a `1`.  Whereas in the bottom-middle image of a `7` was incorrectly labelled as a `9`, but maybe the model was taking into account the features of a `9` that are curved horizontal lines sticking out of a vertical line, (that `7` could be considered an incomplete `9`).
 
 # General Adversarial Networks
