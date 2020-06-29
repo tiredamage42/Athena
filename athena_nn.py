@@ -7,7 +7,6 @@ import os
 # suppress info logs
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
 import sys
-import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 import numpy as np
 from image_utils import plot_9_imgs, plot_accuracy_graph, plot_gan_losses
@@ -124,12 +123,9 @@ def get_testNN_accuracy(gen_weights):
         tnn_input: mnist.x_test,
         tnn_target: mnist.y_test
     })
+
 def get_debug_batch_accuracy(gen_weights_batch):
-    count = len(gen_weights_batch)
-    accuracies = np.zeros([count])
-    for i in range(count):
-        accuracies[i] = get_testNN_accuracy(gen_weights_batch[i])
-    return np.mean(accuracies)
+    return np.mean([get_testNN_accuracy(gen_weights) for gen_weights in gen_weights_batch])
 
 def run_training(num_iterations, batch_size, debug_frequency):
     debug_batch_size = 10
@@ -161,11 +157,18 @@ def run_training(num_iterations, batch_size, debug_frequency):
         input_batch = weights_data.get_random_batch(batch_size)
 
         # train the discriminator
-        _, disc_loss = session.run([a_d_optimizer, a_d_loss], feed_dict={ a_real_data: input_batch, a_input_noise: sample_noise(batch_size, input_noise_dimension) } )
+        _, disc_loss = session.run([a_d_optimizer, a_d_loss], feed_dict={ 
+            a_real_data: input_batch, 
+            a_input_noise: sample_noise(batch_size, input_noise_dimension) 
+        } )
         # train the generator
-        _, gen_loss = session.run([a_g_optimizer, a_g_loss], feed_dict={ a_input_noise: sample_noise(batch_size, input_noise_dimension) })
+        _, gen_loss = session.run([a_g_optimizer, a_g_loss], feed_dict={ 
+            a_input_noise: sample_noise(batch_size, input_noise_dimension) 
+        })
 
-        sys.stdout.write("\rTraining Iteration {0}/{1} :: Loss [D]: {2:.3} [G]: {3:.3} :: Average Generated Net Accuracy: {4:.3%} :: Baseline: {5:.3%}==========".format(i, num_iterations, disc_loss, gen_loss, gen_accuracy, avg_untrained_accuracy))
+        sys.stdout.write("\rTraining Iteration {0}/{1} :: Loss [D]: {2:.3} [G]: {3:.3} :: Average Generated Net Accuracy: {4:.3%} :: Baseline: {5:.3%}==========".format(
+            i, num_iterations, disc_loss, gen_loss, gen_accuracy, avg_untrained_accuracy
+        ))
         sys.stdout.flush()
 
         if i % debug_frequency == 0 or i == num_iterations - 1:
@@ -183,7 +186,6 @@ plot_accuracy_graph(iterations, generated_accuracies, avg_untrained_accuracy, "G
 # visualize the losses of the A-GAN model
 plot_gan_losses(iterations, g_losses, d_losses, 'athena-losses')
 
-
 # debug a generated model
 gen_weights = session.run(a_generated_weights, feed_dict={ a_input_noise: sample_noise(1, input_noise_dimension) })
 # reshape the weights so they're in 2 dimensions, and get index 0 (since there's only 1 in the generated batch)
@@ -197,7 +199,6 @@ x_test, _ = mnist.get_random_testing_batch(9)
 pred = session.run(tnn_prediction, feed_dict={ tnn_input: x_test })
 # visualize the images and predictions
 plot_9_imgs(x_test.reshape([-1, mnist_dataset.img_res, mnist_dataset.img_res]), pred, "Prediction", 'athena-gen-preds')
-
 
 # cleanup tensorflow resources
 session.close()

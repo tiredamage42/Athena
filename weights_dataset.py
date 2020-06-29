@@ -7,7 +7,6 @@ import mnist_dataset
 flat_size = (mnist_dataset.img_res_flat + 1) * mnist_dataset.num_classes
 
 class WeightsData:
-
     
     def __init__ (self):
         self.data = np.load('datasets/weights_dataset.npz')['arr_0']
@@ -34,7 +33,6 @@ if __name__ == "__main__":
     # suppress info logs
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
 
-    import tensorflow as tf2
     import tensorflow.compat.v1 as tf
     from feed_forward_nn import build_feedforward_model
     tf.disable_v2_behavior()
@@ -89,13 +87,14 @@ if __name__ == "__main__":
         if not os.path.exists('datasets/weights'):
             os.makedirs('datasets/weights')
 
-
+        # save the file with appended number if filename exists
         def check_and_rename(file_name, add=0):
             original_file = file_name
+            
             if add != 0:
                 split = file_name.split(".")
-                part_1 = split[0] + "_" + str(add)
-                file_name = ".".join([part_1, split[1]])
+                file_name = ".".join([split[0] + "_" + str(add), split[1]])
+            
             if not os.path.isfile(file_name):
                 # reshape the dataset so it's in it's 'flat' form
                 np.savez_compressed(file_name, weights_dataset.reshape([-1, flat_size]))

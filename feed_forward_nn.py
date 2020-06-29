@@ -6,7 +6,6 @@ import os
 # suppress info logs
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
 
-import tensorflow as tf2
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
@@ -131,11 +130,10 @@ if __name__ == "__main__":
     # test the accuracy of the predictions on the test set (so we know that the model is actually
     # learning and generalizing, not jsut memorizing the training data)
     def test_accuracy():
-        acc = session.run(accuracy, feed_dict={
+        return session.run(accuracy, feed_dict={
             input_layer: mnist.x_test,
             target_output: mnist.y_test
         })
-        return acc
 
     def train_model(num_iterations, batch_size, accuracy_test_frequency):
         acc = 0

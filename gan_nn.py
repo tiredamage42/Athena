@@ -186,7 +186,9 @@ if __name__ == "__main__":
                 input_noise: sample_noise(batch_size, input_noise_size) 
             })
 
-            sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(i, num_iterations, disc_loss, gen_loss))
+            sys.stdout.write("\rTraining Iteration {0}/{1} :: Discriminator Loss: {2:.3} Generator Loss: {3:.3} ==========".format(
+                i, num_iterations, disc_loss, gen_loss
+            ))
             sys.stdout.flush()
 
             if i % debug_frequency == 0 or i == num_iterations - 1:
