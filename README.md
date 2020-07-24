@@ -1,6 +1,8 @@
 # Athena
 An experiment in neural network creation, created as my Stackathon project for Fullstack Academy.
 
+### Can we create a Neural Network that creates other Neural Networks?
+
 Written in python.
 
 Required Libraries:
@@ -18,7 +20,10 @@ Required Libraries:
 > - Convolutional models would be better suited for these demonstrations, but for the sake of simplicity I'll be using linear regression modles.
 ><hr>
 
+## If you're already familiar with Neural Nets and General Adversarial Networks, [you can skip right to the section that's the focus of this repo.](#the-athena-model)
+
 # Neural Nets
+
 Neural nets can be described as function approximators.  The purpose of a basic neural net is to learn the function that will give you the desired output for a particular input, such as labelling a picture as either a dog or a cat.
 
 The learning process happens by taking various input-output pairs and iteratively finding the function that will produce output Y from input X. This is called training.
@@ -97,6 +102,7 @@ A prediction is run and visualized on 9 random datapoints form the test set agai
 It's interesting to see the mistakes and intricacies of the models 'thought' proccess.  For instance, in the middle image, it learned to ignore random noise around teh image ( the two dots on the right side ) and correctly predicted it as a `1`.  Whereas in the bottom-middle image of a `7` was incorrectly labelled as a `9`, but maybe the model was taking into account the features of a `9` that are curved horizontal lines sticking out of a vertical line, (that `7` could be considered an incomplete `9`).
 
 # General Adversarial Networks
+
 A more advanced type of neural network used for different purposes is called a General Adverserial Network or ***"GAN"***.
 
 GANs are generally used to create data from 'scratch'. You've probably seen this type of model in action generating images of faces.
@@ -147,7 +153,6 @@ We also track the loss of the Generator and Discriminator as well:
 <br><b><sup>Losses throughout training</sup></b></div><br>
 
 We can see with the loss decrease for both parts, that the Discriminator and Generator get better at their tasks. But we can see through the chaotic fluctuation throughout the iterations that they are in direct competition with eachotehr.  When the Generator gets better, the Discriminator has a tougher time telling real and fake data apart, and when the Discriminator gets better, the Generator has trouble generating an image that the Discriminator thinks is real.
-
 
 # The Athena Model
 Like Prometheus creating humans from clay in Greek mythology, when we create these models, we are essentailly creating the blueprints ( or husks ) of the algorithms, and letting them grow and change on their own through the training process. In that creation story though, life was breathed into humankind by the goddess Athena. 
